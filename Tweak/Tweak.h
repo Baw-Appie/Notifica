@@ -9,6 +9,7 @@
 @interface UIView(Notifica)
 
 -(id)_viewControllerForAncestor;
+-(NSArray *)allSubviews;
 
 @end
 
@@ -27,49 +28,50 @@
 
 @interface BBBulletin : NSObject
 
-@property (nonatomic,readonly) NSString * sectionDisplayName; 
-@property (nonatomic,readonly) BOOL sectionDisplaysCriticalBulletins; 
-@property (nonatomic,readonly) BOOL showsSubtitle; 
-@property (nonatomic,readonly) unsigned long long messageNumberOfLines; 
-@property (nonatomic,readonly) BOOL usesVariableLayout; 
-@property (nonatomic,readonly) BOOL orderSectionUsingRecencyDate; 
-@property (nonatomic,readonly) BOOL showsDateInFloatingLockScreenAlert; 
-@property (nonatomic,readonly) NSString * subtypeSummaryFormat; 
-@property (nonatomic,readonly) NSString * hiddenPreviewsBodyPlaceholder; 
-@property (nonatomic,readonly) NSString * missedBannerDescriptionFormat; 
-@property (nonatomic,readonly) NSString * fullUnlockActionLabel; 
-@property (nonatomic,readonly) NSString * unlockActionLabel; 
-@property (nonatomic,readonly) NSSet * alertSuppressionAppIDs; 
-@property (nonatomic,readonly) BOOL suppressesAlertsWhenAppIsActive; 
-@property (nonatomic,readonly) BOOL coalescesWhenLocked; 
-@property (nonatomic,readonly) unsigned long long realertCount; 
-@property (nonatomic,readonly) BOOL inertWhenLocked; 
-@property (nonatomic,readonly) BOOL preservesUnlockActionCase; 
-@property (nonatomic,readonly) BOOL visuallyIndicatesWhenDateIsInFuture; 
-@property (nonatomic,readonly) NSString * fullAlternateActionLabel; 
-@property (nonatomic,readonly) NSString * alternateActionLabel; 
-@property (nonatomic,readonly) BOOL canBeSilencedByMenuButtonPress; 
-@property (nonatomic,readonly) BOOL preventLock; 
-@property (nonatomic,readonly) BOOL suppressesTitle; 
-@property (nonatomic,readonly) BOOL showsUnreadIndicatorForNoticesFeed; 
-@property (nonatomic,readonly) BOOL showsContactPhoto; 
-@property (nonatomic,readonly) BOOL playsSoundForModify; 
-@property (nonatomic,readonly) BOOL allowsAutomaticRemovalFromLockScreen; 
-@property (nonatomic,readonly) BOOL allowsAddingToLockScreenWhenUnlocked; 
-@property (nonatomic,readonly) BOOL prioritizeAtTopOfLockScreen; 
-@property (nonatomic,readonly) BOOL preemptsPresentedAlert; 
-@property (nonatomic,readonly) BOOL revealsAdditionalContentOnPresentation; 
-@property (nonatomic,readonly) BOOL shouldDismissBulletinWhenClosed; 
-@property (nonatomic,readonly) unsigned long long subtypePriority; 
-@property (nonatomic,readonly) long long iPodOutAlertType; 
-@property (nonatomic,readonly) NSString * bannerAccessoryRemoteViewControllerClassName; 
-@property (nonatomic,readonly) NSString * bannerAccessoryRemoteServiceBundleIdentifier; 
-@property (nonatomic,readonly) NSString * secondaryContentRemoteViewControllerClassName; 
-@property (nonatomic,readonly) NSString * secondaryContentRemoteServiceBundleIdentifier; 
-@property (nonatomic,readonly) unsigned long long privacySettings; 
-@property (nonatomic,readonly) BOOL suppressesMessageForPrivacy; 
-@property (nonatomic,readonly) NSString * topic; 
-@property (nonatomic,copy) NSString * section; 
+@property (nonatomic,readonly) NSString * sectionDisplayName;
+@property (nonatomic,readonly) BOOL sectionDisplaysCriticalBulletins;
+@property (nonatomic,readonly) BOOL showsSubtitle;
+@property (nonatomic,readonly) unsigned long long messageNumberOfLines;
+@property (nonatomic,readonly) BOOL usesVariableLayout;
+@property (nonatomic,readonly) BOOL orderSectionUsingRecencyDate;
+@property (nonatomic,readonly) BOOL showsDateInFloatingLockScreenAlert;
+@property (nonatomic,readonly) NSString * subtypeSummaryFormat;
+@property (nonatomic,readonly) NSString * hiddenPreviewsBodyPlaceholder;
+@property (nonatomic,readonly) NSString * missedBannerDescriptionFormat;
+@property (nonatomic,readonly) NSString * fullUnlockActionLabel;
+@property (nonatomic,readonly) NSString * unlockActionLabel;
+@property (nonatomic,readonly) NSSet * alertSuppressionAppIDs;
+@property (nonatomic,readonly) BOOL suppressesAlertsWhenAppIsActive;
+@property (nonatomic,readonly) BOOL coalescesWhenLocked;
+@property (nonatomic,readonly) unsigned long long realertCount;
+@property (nonatomic,readonly) BOOL inertWhenLocked;
+@property (nonatomic,readonly) BOOL preservesUnlockActionCase;
+@property (nonatomic,readonly) BOOL visuallyIndicatesWhenDateIsInFuture;
+@property (nonatomic,readonly) NSString * fullAlternateActionLabel;
+@property (nonatomic,readonly) NSString * alternateActionLabel;
+@property (nonatomic,readonly) BOOL canBeSilencedByMenuButtonPress;
+@property (nonatomic,readonly) BOOL preventLock;
+@property (nonatomic,readonly) BOOL suppressesTitle;
+@property (nonatomic,readonly) BOOL showsUnreadIndicatorForNoticesFeed;
+@property (nonatomic,readonly) BOOL showsContactPhoto;
+@property (nonatomic,readonly) BOOL playsSoundForModify;
+@property (nonatomic,readonly) BOOL allowsAutomaticRemovalFromLockScreen;
+@property (nonatomic,readonly) BOOL allowsAddingToLockScreenWhenUnlocked;
+@property (nonatomic,readonly) BOOL prioritizeAtTopOfLockScreen;
+@property (nonatomic,readonly) BOOL preemptsPresentedAlert;
+@property (nonatomic,readonly) BOOL revealsAdditionalContentOnPresentation;
+@property (nonatomic,readonly) BOOL shouldDismissBulletinWhenClosed;
+@property (nonatomic,readonly) unsigned long long subtypePriority;
+@property (nonatomic,readonly) long long iPodOutAlertType;
+@property (nonatomic,readonly) NSString * bannerAccessoryRemoteViewControllerClassName;
+@property (nonatomic,readonly) NSString * bannerAccessoryRemoteServiceBundleIdentifier;
+@property (nonatomic,readonly) NSString * secondaryContentRemoteViewControllerClassName;
+@property (nonatomic,readonly) NSString * secondaryContentRemoteServiceBundleIdentifier;
+@property (nonatomic,readonly) unsigned long long privacySettings;
+@property (nonatomic,readonly) BOOL suppressesMessageForPrivacy;
+@property (nonatomic) BOOL showsMessagePreview;
+@property (nonatomic,readonly) NSString * topic;
+@property (nonatomic,copy) NSString * section;
 @property (nonatomic,copy) NSString * sectionID;                                                      //@synthesize sectionID=_sectionID - In the implementation block
 @property (nonatomic,copy) NSSet * subsectionIDs;                                                     //@synthesize subsectionIDs=_subsectionIDs - In the implementation block
 @property (nonatomic,copy) NSString * recordID;                                                       //@synthesize publisherRecordID=_publisherRecordID - In the implementation block
@@ -83,9 +85,9 @@
 @property (nonatomic,copy) NSArray * intentIDs;                                                       //@synthesize intentIDs=_intentIDs - In the implementation block
 @property (assign,nonatomic) unsigned long long counter;                                              //@synthesize counter=_counter - In the implementation block
 @property (nonatomic,copy) NSString * header;                                                         //@synthesize header=_header - In the implementation block
-@property (nonatomic,copy) NSString * title; 
-@property (nonatomic,copy) NSString * subtitle; 
-@property (nonatomic,copy) NSString * message; 
+@property (nonatomic,copy) NSString * title;
+@property (nonatomic,copy) NSString * subtitle;
+@property (nonatomic,copy) NSString * message;
 @property (nonatomic,copy) NSString * summaryArgument;                                                //@synthesize summaryArgument=_summaryArgument - In the implementation block
 @property (assign,nonatomic) unsigned long long summaryArgumentCount;                                 //@synthesize summaryArgumentCount=_summaryArgumentCount - In the implementation block
 @property (assign,nonatomic) BOOL hasCriticalIcon;                                                    //@synthesize hasCriticalIcon=_hasCriticalIcon - In the implementation block
@@ -103,11 +105,11 @@
 @property (assign,nonatomic) BOOL ignoresQuietMode;                                                   //@synthesize ignoresQuietMode=_ignoresQuietMode - In the implementation block
 @property (assign,nonatomic) BOOL ignoresDowntime;                                                    //@synthesize ignoresDowntime=_ignoresDowntime - In the implementation block
 @property (nonatomic,copy) NSString * unlockActionLabelOverride;                                      //@synthesize unlockActionLabelOverride=_unlockActionLabelOverride - In the implementation block
-@property (nonatomic,copy) BBAction * defaultAction; 
-@property (nonatomic,copy) BBAction * alternateAction; 
-@property (nonatomic,copy) BBAction * acknowledgeAction; 
-@property (nonatomic,copy) BBAction * snoozeAction; 
-@property (nonatomic,copy) BBAction * raiseAction; 
+@property (nonatomic,copy) BBAction * defaultAction;
+@property (nonatomic,copy) BBAction * alternateAction;
+@property (nonatomic,copy) BBAction * acknowledgeAction;
+@property (nonatomic,copy) BBAction * snoozeAction;
+@property (nonatomic,copy) BBAction * raiseAction;
 @property (nonatomic,copy) NSArray * buttons;                                                         //@synthesize buttons=_buttons - In the implementation block
 @property (nonatomic,retain) NSMutableDictionary * actions;                                           //@synthesize actions=_actions - In the implementation block
 @property (nonatomic,retain) NSMutableDictionary * supplementaryActionsByLayout;                      //@synthesize supplementaryActionsByLayout=_supplementaryActionsByLayout - In the implementation block
@@ -121,17 +123,17 @@
 @property (nonatomic,copy) NSString * bulletinVersionID;                                              //@synthesize bulletinVersionID=_bulletinVersionID - In the implementation block
 @property (nonatomic,retain) NSDate * expirationDate;                                                 //@synthesize expirationDate=_expirationDate - In the implementation block
 @property (assign,nonatomic) unsigned long long expirationEvents;                                     //@synthesize expirationEvents=_expirationEvents - In the implementation block
-@property (nonatomic,copy) BBAction * expireAction; 
-@property (assign,nonatomic) unsigned long long realertCount_deprecated; 
-@property (nonatomic,copy) NSSet * alertSuppressionAppIDs_deprecated; 
+@property (nonatomic,copy) BBAction * expireAction;
+@property (assign,nonatomic) unsigned long long realertCount_deprecated;
+@property (nonatomic,copy) NSSet * alertSuppressionAppIDs_deprecated;
 @property (nonatomic,copy) NSString * parentSectionID;                                                //@synthesize parentSectionID=_parentSectionID - In the implementation block
 @property (nonatomic,copy) NSString * universalSectionID;                                             //@synthesize universalSectionID=_universalSectionID - In the implementation block
-@property (assign,nonatomic) BOOL hasPrivateContent; 
+@property (assign,nonatomic) BOOL hasPrivateContent;
 @property (assign,nonatomic) long long contentPreviewSetting;                                         //@synthesize contentPreviewSetting=_contentPreviewSetting - In the implementation block
 @property (assign,nonatomic) BOOL preventAutomaticRemovalFromLockScreen;                              //@synthesize preventAutomaticRemovalFromLockScreen=_preventAutomaticRemovalFromLockScreen - In the implementation block
 @property (assign,nonatomic) long long lockScreenPriority;                                            //@synthesize lockScreenPriority=_lockScreenPriority - In the implementation block
 @property (assign,nonatomic) long long backgroundStyle;                                               //@synthesize backgroundStyle=_backgroundStyle - In the implementation block
-@property (nonatomic,copy,readonly) NSString * publisherMatchID; 
+@property (nonatomic,copy,readonly) NSString * publisherMatchID;
 
 @end
 
@@ -147,15 +149,15 @@
 @interface _MTBackdropView : UIView
 
 @property (assign,setter=_setPreservesFiltersAtZero:,getter=_preservesFiltersAtZero,nonatomic) BOOL preservesFiltersAtZero;              //@synthesize preservesFiltersAtZero=_preservesFiltersAtZero - In the implementation block
-@property (assign,nonatomic) double luminanceAlpha; 
-@property (assign,nonatomic) double blurRadius; 
-@property (nonatomic,copy) NSString * blurInputQuality; 
-@property (assign,nonatomic) double saturation; 
-@property (assign,nonatomic) double brightness; 
-@property (assign,nonatomic) double zoom; 
+@property (assign,nonatomic) double luminanceAlpha;
+@property (assign,nonatomic) double blurRadius;
+@property (nonatomic,copy) NSString * blurInputQuality;
+@property (assign,nonatomic) double saturation;
+@property (assign,nonatomic) double brightness;
+@property (assign,nonatomic) double zoom;
 @property (nonatomic,copy) UIColor * colorMatrixColor;                                                                                   //@synthesize colorMatrixColor=_colorMatrixColor - In the implementation block
 @property (nonatomic,copy) UIColor * colorAddColor;                                                                                      //@synthesize colorAddColor=_colorAddColor - In the implementation block
-@property (nonatomic,copy) NSString * groupName; 
+@property (nonatomic,copy) NSString * groupName;
 +(id)_luminanceColorMapWithName:(id)arg1 ;
 +(Class)layerClass;
 -(double)luminanceAlpha;
@@ -195,7 +197,7 @@
 @end
 
 @interface _UIBackdropEffectView : UIView
-@property (nonatomic,retain) CALayer * backdropLayer;   
+@property (nonatomic,retain) CALayer * backdropLayer;
 @end
 
 @interface _UIBackdropView : UIView {
@@ -255,17 +257,17 @@
 -(void)ntfGradient:(UIColor *)color;
 -(void)ntfSetCornerRadius:(double)cornerRadius;
 
-//@property (nonatomic,readonly) <MTMaterialSettings><MTMaterialSettingsObservable>* materialSettings; 
-//@property (nonatomic,__weak,readonly) MTVibrantStylingProvider* vibrantStylingProvider; 
-@property (assign,getter=isHighlighted,nonatomic) bool highlighted; 
-@property (assign,nonatomic) bool allowsInPlaceFiltering; 
-@property (nonatomic,copy) id backdropScaleAdjustment; 
-@property (assign,nonatomic) bool shouldCrossfadeIfNecessary; 
-@property (assign,nonatomic) bool forceCrossfadeIfNecessary; 
-@property (assign,nonatomic) double weighting;    
-@property (readonly) Class superclass; 
-@property (copy,readonly) NSString* description; 
-@property (copy,readonly) NSString* debugDescription; 
+//@property (nonatomic,readonly) <MTMaterialSettings><MTMaterialSettingsObservable>* materialSettings;
+//@property (nonatomic,__weak,readonly) MTVibrantStylingProvider* vibrantStylingProvider;
+@property (assign,getter=isHighlighted,nonatomic) bool highlighted;
+@property (assign,nonatomic) bool allowsInPlaceFiltering;
+@property (nonatomic,copy) id backdropScaleAdjustment;
+@property (assign,nonatomic) bool shouldCrossfadeIfNecessary;
+@property (assign,nonatomic) bool forceCrossfadeIfNecessary;
+@property (assign,nonatomic) double weighting;
+@property (readonly) Class superclass;
+@property (copy,readonly) NSString* description;
+@property (copy,readonly) NSString* debugDescription;
 +(void)initialize;
 +(id)materialViewWithRecipe:(long long)arg1 options:(unsigned long long)arg2 ;
 +(id)materialViewWithRecipe:(long long)arg1 options:(unsigned long long)arg2 initialWeighting:(double)arg3 scaleAdjustment:(/*^block*/ id)arg4 ;
@@ -334,12 +336,12 @@
 
 }
 
-@property (nonatomic,readonly) MTMaterialView* backgroundMaterialView; 
-@property (assign,nonatomic) double cornerRadius; 
-@property (assign,getter=isHighlighted,nonatomic) bool highlighted; 
-@property (readonly) Class superclass; 
-@property (copy,readonly) NSString* description; 
-@property (copy,readonly) NSString* debugDescription; 
+@property (nonatomic,readonly) MTMaterialView* backgroundMaterialView;
+@property (assign,nonatomic) double cornerRadius;
+@property (assign,getter=isHighlighted,nonatomic) bool highlighted;
+@property (readonly) Class superclass;
+@property (copy,readonly) NSString* description;
+@property (copy,readonly) NSString* debugDescription;
 @property (assign,nonatomic) bool usesBackgroundView;                                     //@synthesize usesBackgroundView=_usesBackgroundView - In the implementation block
 @property (nonatomic,retain) UIView* backgroundView;                                      //@synthesize backgroundView=_backgroundView - In the implementation block
 @property (nonatomic,readonly) UIView* customContentView;                                 //@synthesize customContentView=_customContentView - In the implementation block
@@ -405,27 +407,27 @@
 
 }
 
-@property (getter=_titleLabel,nonatomic,readonly) UILabel* titleLabel; 
-@property (getter=_outgoingTitleLabel,nonatomic,readonly) UILabel* outgoingTitleLabel; 
-@property (getter=_dateLabel,nonatomic,readonly) UILabel* dateLabel; 
-@property (getter=_titleLabelFont,nonatomic,readonly) UIFont* titleLabelFont; 
-@property (getter=_dateLabelFont,nonatomic,readonly) UIFont* dateLabelFont; 
-@property (assign,setter=_setUsesLargeTextLayout:,getter=_usesLargeTextLayout,nonatomic) bool usesLargeTextLayout; 
-@property (nonatomic,retain) UIImage* icon; 
-@property (nonatomic,retain) NSArray* icons; 
-@property (nonatomic,copy) NSString* title; 
+@property (getter=_titleLabel,nonatomic,readonly) UILabel* titleLabel;
+@property (getter=_outgoingTitleLabel,nonatomic,readonly) UILabel* outgoingTitleLabel;
+@property (getter=_dateLabel,nonatomic,readonly) UILabel* dateLabel;
+@property (getter=_titleLabelFont,nonatomic,readonly) UIFont* titleLabelFont;
+@property (getter=_dateLabelFont,nonatomic,readonly) UIFont* dateLabelFont;
+@property (assign,setter=_setUsesLargeTextLayout:,getter=_usesLargeTextLayout,nonatomic) bool usesLargeTextLayout;
+@property (nonatomic,retain) UIImage* icon;
+@property (nonatomic,retain) NSArray* icons;
+@property (nonatomic,copy) NSString* title;
 @property (nonatomic,copy) NSDate* date;                                                                                      //@synthesize date=_date - In the implementation block
 @property (assign,getter=isDateAllDay,nonatomic) bool dateAllDay;                                                             //@synthesize dateAllDay=_dateAllDay - In the implementation block
 @property (nonatomic,copy) NSTimeZone* timeZone;                                                                              //@synthesize timeZone=_timeZone - In the implementation block
 @property (nonatomic,readonly) UIButton* iconButton;                                                                          //@synthesize iconButton=_iconButton - In the implementation block
 @property (nonatomic,readonly) NSArray * iconButtons; //iOS 12
-@property (nonatomic,readonly) UIButton* utilityButton; 
+@property (nonatomic,readonly) UIButton* utilityButton;
 @property (nonatomic,retain) UIView* utilityView;                                                                             //@synthesize utilityView=_utilityView - In the implementation block
 @property (assign,nonatomic) bool heedsHorizontalLayoutMargins;                                                               //@synthesize heedsHorizontalLayoutMargins=_heedsHorizontalLayoutMargins - In the implementation block
-@property (nonatomic,readonly) double contentBaseline; 
-@property (readonly) Class superclass; 
-@property (copy,readonly) NSString* description; 
-@property (copy,readonly) NSString* debugDescription; 
+@property (nonatomic,readonly) double contentBaseline;
+@property (readonly) Class superclass;
+@property (copy,readonly) NSString* description;
+@property (copy,readonly) NSString* debugDescription;
 @property (assign,nonatomic) bool adjustsFontForContentSizeCategory;                                                          //@synthesize adjustsFontForContentSizeCategory=_adjustsFontForContentSizeCategory - In the implementation block
 @property (nonatomic,copy) NSString* preferredContentSizeCategory;                                                            //@synthesize preferredContentSizeCategory=_preferredContentSizeCategory - In the implementation block
 
@@ -523,21 +525,21 @@
 }
 
 @property (assign,getter=isSashHidden,nonatomic) bool sashHidden;                         //@synthesize sashHidden=_sashHidden - In the implementation block
-@property (readonly) Class superclass; 
-@property (copy,readonly) NSString* description; 
-@property (copy,readonly) NSString* debugDescription; 
-@property (nonatomic,readonly) UIView* customContentView; 
-@property (assign,nonatomic) bool hasShadow; 
-@property (assign,getter=isBackgroundBlurred,nonatomic) bool backgroundBlurred; 
-@property (assign,nonatomic) bool adjustsFontForContentSizeCategory; 
-@property (nonatomic,copy) NSString* preferredContentSizeCategory; 
-@property (nonatomic,retain) UIImage* icon; 
-@property (nonatomic,copy) NSString* title; 
-@property (nonatomic,copy) NSDate* date; 
-@property (assign,getter=isDateAllDay,nonatomic) bool dateAllDay; 
-@property (nonatomic,copy) NSTimeZone* timeZone; 
-@property (nonatomic,readonly) UIButton* iconButton; 
-@property (nonatomic,readonly) UIButton* utilityButton; 
+@property (readonly) Class superclass;
+@property (copy,readonly) NSString* description;
+@property (copy,readonly) NSString* debugDescription;
+@property (nonatomic,readonly) UIView* customContentView;
+@property (assign,nonatomic) bool hasShadow;
+@property (assign,getter=isBackgroundBlurred,nonatomic) bool backgroundBlurred;
+@property (assign,nonatomic) bool adjustsFontForContentSizeCategory;
+@property (nonatomic,copy) NSString* preferredContentSizeCategory;
+@property (nonatomic,retain) UIImage* icon;
+@property (nonatomic,copy) NSString* title;
+@property (nonatomic,copy) NSDate* date;
+@property (assign,getter=isDateAllDay,nonatomic) bool dateAllDay;
+@property (nonatomic,copy) NSTimeZone* timeZone;
+@property (nonatomic,readonly) UIButton* iconButton;
+@property (nonatomic,readonly) UIButton* utilityButton;
 -(void)setNeedsLayout;
 -(void)layoutSubviews;
 -(void)setTitle:(NSString*)arg1 ;
@@ -601,11 +603,12 @@
 
 @property (assign,nonatomic) WGWidgetHostingViewController* widgetHost;                      //@synthesize widgetHost=_widgetHost - In the implementation block
 @property (assign,nonatomic) WGWidgetListItemViewController* listItem;                       //@synthesize listItem=_listItem - In the implementation block
-@property (nonatomic,readonly) UIButton* showMoreButton; 
+@property (nonatomic,readonly) UIButton* showMoreButton;
+@property (nonatomic,assign) UIView* contentView;
 @property (assign,getter=isShowingMoreContent,nonatomic) bool showingMoreContent;                   //@synthesize showingMoreContent=_showingMoreContent - In the implementation block
-@property (assign,getter=isShowMoreButtonVisible,nonatomic) bool showMoreButtonVisible; 
-@property (nonatomic,readonly) UIButton* addWidgetButton; 
-@property (assign,getter=isAddWidgetButtonVisible,nonatomic) bool addWidgetButtonVisible; 
+@property (assign,getter=isShowMoreButtonVisible,nonatomic) bool showMoreButtonVisible;
+@property (nonatomic,readonly) UIButton* addWidgetButton;
+@property (assign,getter=isAddWidgetButtonVisible,nonatomic) bool addWidgetButtonVisible;
 -(id)initWithFrame:(CGRect)arg1 ;
 -(void)layoutSubviews;
 -(CGSize)sizeThatFits:(CGSize)arg1 ;
@@ -669,15 +672,15 @@
 
 }
 
-@property (nonatomic,retain) NSString * primaryText; 
-@property (nonatomic,retain) NSString * primarySubtitleText; 
-@property (nonatomic,retain) NSString * secondaryText; 
-@property (nonatomic,retain) UIImage * thumbnail; 
+@property (nonatomic,retain) NSString * primaryText;
+@property (nonatomic,retain) NSString * primarySubtitleText;
+@property (nonatomic,retain) NSString * secondaryText;
+@property (nonatomic,retain) UIImage * thumbnail;
 @property (nonatomic,retain) UIView * accessoryView;                                                                                                            //@synthesize accessoryView=_accessoryView - In the implementation block
-@property (assign,nonatomic) unsigned long long messageNumberOfLines; 
-@property (readonly) unsigned long long hash; 
-@property (readonly) Class superclass; 
-@property (copy,readonly) NSString * description; 
+@property (assign,nonatomic) unsigned long long messageNumberOfLines;
+@property (readonly) unsigned long long hash;
+@property (readonly) Class superclass;
+@property (copy,readonly) NSString * description;
 @property (copy,readonly) NSString * debugDescription;                                                                             //@synthesize vibrantStylingProvider=_vibrantStylingProvider - In the implementation block
 @property (assign,nonatomic) BOOL adjustsFontForContentSizeCategory;                                                                                            //@synthesize adjustsFontForContentSizeCategory=_adjustsFontForContentSizeCategory - In the implementation block
 @property (nonatomic,copy) NSString * preferredContentSizeCategory;                                                                                             //@synthesize preferredContentSizeCategory=_preferredContentSizeCategory - In the implementation block
@@ -791,21 +794,21 @@
 
 }
 
-@property (readonly) unsigned long long hash; 
-@property (readonly) Class superclass; 
-@property (copy,readonly) NSString * description; 
-@property (copy,readonly) NSString * debugDescription; 
-@property (nonatomic,retain) UIImage * icon; 
-@property (nonatomic,copy) NSString * title; 
-@property (nonatomic,copy) NSDate * date; 
-@property (nonatomic,copy) NSTimeZone * timeZone; 
-@property (nonatomic,copy) NSString * primaryText; 
-@property (nonatomic,copy) NSString * primarySubtitleText; 
-@property (nonatomic,copy) NSString * secondaryText; 
-@property (nonatomic,retain) NSArray * interfaceActions; 
-@property (nonatomic,retain) UIImage * thumbnail; 
-@property (nonatomic,retain) UIView * accessoryView; 
-@property (assign,nonatomic) unsigned long long messageNumberOfLines; 
+@property (readonly) unsigned long long hash;
+@property (readonly) Class superclass;
+@property (copy,readonly) NSString * description;
+@property (copy,readonly) NSString * debugDescription;
+@property (nonatomic,retain) UIImage * icon;
+@property (nonatomic,copy) NSString * title;
+@property (nonatomic,copy) NSDate * date;
+@property (nonatomic,copy) NSTimeZone * timeZone;
+@property (nonatomic,copy) NSString * primaryText;
+@property (nonatomic,copy) NSString * primarySubtitleText;
+@property (nonatomic,copy) NSString * secondaryText;
+@property (nonatomic,retain) NSArray * interfaceActions;
+@property (nonatomic,retain) UIImage * thumbnail;
+@property (nonatomic,retain) UIView * accessoryView;
+@property (assign,nonatomic) unsigned long long messageNumberOfLines;
 
 @property (nonatomic, retain) UIColor *ntfDynamicColor;
 @property (nonatomic, retain) NSString *ntfId;
@@ -876,7 +879,7 @@
 
 @end
 
-@interface _NCNotificationViewControllerView : UIView 
+@interface _NCNotificationViewControllerView : UIView
 
 @property (nonatomic, retain) NCNotificationShortLookView *contentView;
 
@@ -903,7 +906,7 @@
 
 @end
 
-@interface NCNotificationListCellActionButtonsView : UIView 
+@interface NCNotificationListCellActionButtonsView : UIView
 
 @property (nonatomic,retain) UIStackView * buttonsStackView;
 @property (nonatomic,retain) UIView * clippingView;
@@ -988,9 +991,9 @@
 
 @interface PLPlatterView : UIView
 
-@property (nonatomic,readonly) MTMaterialView * backgroundMaterialView; 
-@property (nonatomic,readonly) MTMaterialView * mainOverlayView; 
-@property (assign,nonatomic) double cornerRadius; 
+@property (nonatomic,readonly) MTMaterialView * backgroundMaterialView;
+@property (nonatomic,readonly) MTMaterialView * mainOverlayView;
+@property (assign,nonatomic) double cornerRadius;
 @property (nonatomic,retain) UIView * backgroundView;                                          //@synthesize backgroundView=_backgroundView - In the implementation block
 
 @end
@@ -1090,10 +1093,28 @@
 -(BOOL)handleEvent:(id)event;
 @end
 
-@interface SBDashBoardIdleTimerProvider : NSObject 
+@interface SBDashBoardIdleTimerProvider : NSObject
 
 -(BOOL)isIdleTimerEnabled;
 
+@end
+
+@interface CSCombinedListViewController
+-(void)_updateListViewContentInset;
+@end
+
+@interface NCNotificationStructuredSectionList
+@property (nonatomic,readonly) NSArray * allNotificationRequests;
+@end
+
+@interface NCNotificationMasterList
+@property (nonatomic,retain) NSMutableArray * notificationSections;
+-(void)removeNotificationRequest:(id)arg1 ;
+@end
+
+@interface NCNotificationStructuredListViewController
+@property (nonatomic,retain) NCNotificationMasterList * masterList;
+-(void)removeNotificationRequest:(id)arg1 ;
 @end
 
 @interface NCNotificationCombinedListViewController : UICollectionView

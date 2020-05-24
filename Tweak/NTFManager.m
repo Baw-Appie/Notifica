@@ -1,6 +1,6 @@
 #import <Nepeta/NEPColorUtils.h>
-#import <MediaPlayer/MPArtworkColorAnalyzer.h>
-#import <MediaPlayer/MPArtworkColorAnalysis.h>
+// #import <MediaPlayer/MPArtworkColorAnalyzer.h>
+// #import <MediaPlayer/MPArtworkColorAnalysis.h>
 #import "NTFManager.h"
 #import "IconHeaders.h"
 
@@ -27,14 +27,21 @@
 
 -(UIImage *)getIcon:(NSString *)bundleIdentifier {
     if (self.iconStore[bundleIdentifier]) return self.iconStore[bundleIdentifier];
+    UIImage *image;
+    SBIconModel *model;
 
-    SBIconModel *model = [[(SBIconController *)[NSClassFromString(@"SBIconController") sharedInstance] homescreenIconViewMap] iconModel];
+    SBIconController *iconController = [NSClassFromString(@"SBIconController") sharedInstance];
+
+    if([iconController respondsToSelector:@selector(homescreenIconViewMap)]) model = [[iconController homescreenIconViewMap] iconModel];
+    else if([iconController respondsToSelector:@selector(model)]) model = [iconController model];
     SBIcon *icon = [model applicationIconForBundleIdentifier:bundleIdentifier];
-    UIImage *image = [icon getIconImage:2];
+    if([icon respondsToSelector:@selector(getIconImage:)]) image = [icon getIconImage:2];
+    else if([icon respondsToSelector:@selector(iconImageWithInfo:)]) image = [icon iconImageWithInfo:(struct SBIconImageInfo){60,60,2,0}];
 
-    if (!image) {
+    if (!image && model) {
         icon = [model applicationIconForBundleIdentifier:@"com.apple.Preferences"];
-        image = [icon getIconImage:2];
+        if([icon respondsToSelector:@selector(getIconImage:)]) image = [icon getIconImage:2];
+        else if([icon respondsToSelector:@selector(iconImageWithInfo:)]) image = [icon iconImageWithInfo:(struct SBIconImageInfo){60,60,2,0}];
     }
 
     if (!image) {
@@ -79,10 +86,11 @@
             });
         });
     } else {
-        MPArtworkColorAnalyzer *colorAnalyzer = [[MPArtworkColorAnalyzer alloc] initWithImage:image algorithm:0];
-        [colorAnalyzer analyzeWithCompletionHandler:^(MPArtworkColorAnalyzer *analyzer, MPArtworkColorAnalysis *analysis) {
-            self.colorCache[mode][bundleIdentifier] = [analysis.backgroundColor copy];
-        }];
+        // MPArtworkColorAnalyzer *colorAnalyzer = [[MPArtworkColorAnalyzer alloc] initWithImage:image algorithm:0];
+        // [colorAnalyzer analyzeWithCompletionHandler:^(MPArtworkColorAnalyzer *analyzer, MPArtworkColorAnalysis *analysis) {
+        //     self.colorCache[mode][bundleIdentifier] = [analysis.backgroundColor copy];
+        // }];
+        self.colorCache[mode][bundleIdentifier] = [UIColor blackColor];
     }
 }
 

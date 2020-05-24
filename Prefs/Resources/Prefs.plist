@@ -22,6 +22,23 @@
 			<string>NepetaDev</string>
 		</dict>
 		<dict>
+			<key>cellClass</key>
+			<string>HBTwitterCell</string>
+			<key>label</key>
+			<string>Baw Appie</string>
+			<key>user</key>
+			<string>BawAppie</string>
+		</dict>
+		<dict>
+			<key>cellClass</key>
+			<string>HBTwitterCell</string>
+			<key>label</key>
+			<string>Kritanta</string>
+			<key>user</key>
+			<string>_kritanta</string>
+		</dict>
+
+		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
@@ -240,7 +257,17 @@
 			<key>subtitle</key>
 			<string>SUPPORT_ME</string>
 			<key>url</key>
-			<string>https://nepeta.me/donate</string>
+			<string>https://paypal.me/pp121324</string>
+		</dict>
+		<dict>
+			<key>cellClass</key>
+			<string>HBLinkTableCell</string>
+			<key>label</key>
+			<string>Report Issue</string>
+			<key>subtitle</key>
+			<string>GtiHub Issues</string>
+			<key>url</key>
+			<string>https://github.com/Baw-Appie/Notifica/issues</string>
 		</dict>
 	</array>
 	<key>title</key>

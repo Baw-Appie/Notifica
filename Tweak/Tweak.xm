@@ -42,7 +42,7 @@ static dispatch_queue_t getBBServerQueue() {
 			if (pointer) {
 				queue = *pointer;
 			}
-			dlclose(handle);        
+			dlclose(handle);
 		}
 	});
 	return queue;
@@ -87,6 +87,7 @@ void ntfSetIconForHCV(MTPlatterHeaderContentView* hcv, UIImage *icon) {
     }
 }
 
+
 static void fakeNotification(NSString *sectionID, NSDate *date, NSString *message, bool banner) {
     BBBulletin *bulletin = [[%c(BBBulletin) alloc] init];
 
@@ -98,10 +99,19 @@ static void fakeNotification(NSString *sectionID, NSDate *date, NSString *messag
     bulletin.publisherBulletinID = [[NSProcessInfo processInfo] globallyUniqueString];
     bulletin.date = date;
     bulletin.defaultAction = [%c(BBAction) actionWithLaunchBundleID:sectionID callblock:nil];
+    bulletin.clearable = YES;
+    bulletin.showsMessagePreview = YES;
+    bulletin.publicationDate = date;
+    bulletin.lastInterruptDate = date;
 
     if (banner) {
-        SBLockScreenNotificationListController *listController=([[%c(UIApplication) sharedApplication] respondsToSelector:@selector(notificationDispatcher)] && [[[%c(UIApplication) sharedApplication] notificationDispatcher] respondsToSelector:@selector(notificationSource)]) ? [[[%c(UIApplication) sharedApplication] notificationDispatcher] notificationSource]  : [[[%c(SBLockScreenManager) sharedInstanceIfExists] lockScreenViewController] valueForKey:@"notificationController"];
-        [listController observer:[listController valueForKey:@"observer"] addBulletin:bulletin forFeed:14];
+        if ([bbServer respondsToSelector:@selector(publishBulletin:destinations:)]) {
+            dispatch_sync(getBBServerQueue(), ^{
+                [bbServer publishBulletin:bulletin destinations:15];
+            });
+        }
+        // SBLockScreenNotificationListController *listController=([[%c(UIApplication) sharedApplication] respondsToSelector:@selector(notificationDispatcher)] && [[[%c(UIApplication) sharedApplication] notificationDispatcher] respondsToSelector:@selector(notificationSource)]) ? [[[%c(UIApplication) sharedApplication] notificationDispatcher] notificationSource]  : [[[%c(SBLockScreenManager) sharedInstanceIfExists] lockScreenViewController] valueForKey:@"notificationController"];
+        // [listController observer:[listController valueForKey:@"observer"] addBulletin:bulletin forFeed:14];
     } else {
         if ([bbServer respondsToSelector:@selector(publishBulletin:destinations:alwaysToLockScreen:)]) {
             dispatch_sync(getBBServerQueue(), ^{
@@ -145,15 +155,15 @@ void NTFTestBanner() {
 - (NSString *)md5 {
     // Create byte array of unsigned chars
     unsigned char md5Buffer[CC_MD5_DIGEST_LENGTH];
-        
+
     // Create 16 byte MD5 hash value, store in buffer
     CC_MD5(self.bytes, (unsigned int)self.length, md5Buffer);
-        
+
     // Convert unsigned char buffer to NSString of hex values
     NSMutableString *output = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
-    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++) 
+    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
         [output appendFormat:@"%02x",md5Buffer[i]];
-    
+
     return output;
 }
 @end
@@ -265,7 +275,7 @@ void NTFTestBanner() {
     }
 
     if (!config || ![config enabled]) return;
-    
+
     if (self.icons && [self.icons count] > 0 && [config hideIcon]) {
         if ([config style] == 0) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 25, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width + 50, self.titleLabel.frame.size.height);
         if ([config style] == 1) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 30, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width + 50, self.titleLabel.frame.size.height);
@@ -298,7 +308,170 @@ void NTFTestBanner() {
     }
 
     if (!config || ![config enabled]) return;
-    
+
+    if ([self icon] && [config hideIcon]) {
+        if ([config style] == 0) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 25, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width + 50, self.titleLabel.frame.size.height);
+        if ([config style] == 1) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 30, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width + 50, self.titleLabel.frame.size.height);
+        return;
+    }
+
+    if (![self icon] && [config hideIcon]) {
+        if ([config style] == 1) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 5, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width, self.titleLabel.frame.size.height);
+        return;
+    }
+
+    if ([config style] == 1) {
+        self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x + 5, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width - 10, self.titleLabel.frame.size.height);
+    }
+}
+%end
+
+%end
+
+
+
+%group Notifica_iOS13
+
+%hook _MTBackdropView
+-(void)layoutSubviews {
+    %orig;
+    self.clipsToBounds = YES;
+}
+%end
+
+%hook MTMaterialView
+%property (nonatomic, retain) CAGradientLayer *ntfGradientLayer;
+-(void)layoutSubviews {
+    %orig;
+    UIView *view = MSHookIvar<UIView *>(self, "_highlightView");
+    self.clipsToBounds = YES;
+    view.clipsToBounds = YES;
+    if ([self respondsToSelector:@selector(groupName)] && [self.groupName isEqualToString:@"NCNotificationCombinedListViewController.blur.MTMaterialRecipeNotifications"]) {
+        if ([[UIScreen mainScreen] bounds].size.height == self.bounds.size.height) {
+            self.hidden = YES;
+        }
+    }
+}
+
+%new
+-(void)ntfColorize:(UIColor *)color withBlurColor:(UIColor *)bgColor alpha:(double)alpha {
+    UIView *view = MSHookIvar<UIView *>(self, "_highlightView");
+    if (!view || !color || !bgColor) return;
+
+    self.clipsToBounds = YES;
+    view.clipsToBounds = YES;
+
+    if ([view respondsToSelector:@selector(setColorMatrixColor:)]) {
+        _MTBackdropView *backdropView = (_MTBackdropView *)view;
+
+        [backdropView setBackgroundColor: bgColor];
+        [backdropView setColorMatrixColor: [color colorWithAlphaComponent:alpha]];
+    } else {
+        _UIBackdropView *backdropView = (_UIBackdropView *)view;
+
+        if([backdropView respondsToSelector:@selector(colorTintView)]) {
+            if (backdropView.colorTintView) {
+                backdropView.colorTintView.backgroundColor = color;
+            }
+        }
+
+        if([backdropView respondsToSelector:@selector(grayscaleTintView)]) {
+            if (backdropView.grayscaleTintView && bgColor) {
+                backdropView.grayscaleTintView.backgroundColor = bgColor;
+            }
+        }
+
+    }
+}
+
+%new
+-(void)ntfGradient:(UIColor *)color {
+    UIView *view = MSHookIvar<UIView *>(self, "_highlightView");
+    if (self.ntfGradientLayer) {
+        [self.ntfGradientLayer removeFromSuperlayer];
+    }
+
+    self.ntfGradientLayer = [CAGradientLayer layer];
+
+    self.ntfGradientLayer.frame = CGRectMake(0,0,view.bounds.size.width,view.bounds.size.height+300);
+    self.ntfGradientLayer.startPoint = CGPointMake(0.0, 0.5);
+    self.ntfGradientLayer.endPoint = CGPointMake(1.0, 0.5);
+    self.ntfGradientLayer.colors = @[(id)[UIColor clearColor].CGColor, (id)color.CGColor];
+
+    [view.layer insertSublayer:self.ntfGradientLayer atIndex:[view.layer.sublayers count]];
+}
+
+%new
+-(void)ntfSetCornerRadius:(double)cornerRadius {
+    UIView *view = MSHookIvar<UIView *>(self, "_highlightView");
+
+    self.layer.cornerRadius = cornerRadius;
+    if ([view respondsToSelector:@selector(setColorMatrixColor:)]) {
+        _MTBackdropView *backdropView = (_MTBackdropView *)view;
+        backdropView.layer.cornerRadius = cornerRadius;
+
+        CALayer *backdropLayer = (CALayer *)[backdropView _backdropLayer];
+        backdropLayer.cornerRadius = cornerRadius;
+    } else {
+        /*
+        _UIBackdropView *backdropView = (_UIBackdropView *)view;
+        if (backdropView.backdropEffectView) backdropView.backdropEffectView.backdropLayer.cornerRadius = cornerRadius;
+        if (backdropView.grayscaleTintView) backdropView.grayscaleTintView.layer.cornerRadius = cornerRadius;
+        if (backdropView.colorTintView) backdropView.colorTintView.layer.cornerRadius = cornerRadius;*/
+    }
+}
+
+%end
+
+%hook PLPlatterHeaderContentView
+
+-(void)_layoutTitleLabelWithScale:(double)arg1 {
+    %orig;
+    NTFConfig *config = nil;
+    if (self.superview) {
+        if ([self.superview isKindOfClass:%c(NCNotificationShortLookView)]) {
+            NCNotificationShortLookView* sv = (NCNotificationShortLookView *)self.superview;
+            if ([sv respondsToSelector:@selector(ntfConfig)]) config = [sv ntfConfig];
+        } else if ([self.superview isKindOfClass:%c(WGWidgetPlatterView)]) {
+            config = configWidgets;
+        }
+    }
+
+    if (!config || ![config enabled]) return;
+
+    if (self.icons && [self.icons count] > 0 && [config hideIcon]) {
+        if ([config style] == 0) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 25, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width + 50, self.titleLabel.frame.size.height);
+        if ([config style] == 1) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 30, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width + 50, self.titleLabel.frame.size.height);
+        return;
+    }
+
+    if (!self.icons || ([self.icons count] == 0 && [config hideIcon])) {
+        if ([config style] == 1) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 5, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width, self.titleLabel.frame.size.height);
+        return;
+    }
+
+    if ([config style] == 1) {
+        self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x + 5, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width - 10, self.titleLabel.frame.size.height);
+    }
+}
+%end
+
+%hook MTPlatterHeaderContentView
+
+-(void)_layoutTitleLabelWithScale:(double)arg1 {
+    %orig;
+    NTFConfig *config = nil;
+    if (self.superview && self.superview.superview) {
+        if ([self.superview.superview isKindOfClass:%c(NCNotificationShortLookView)]) {
+            NCNotificationShortLookView* sv = (NCNotificationShortLookView *)self.superview.superview;
+            if ([sv respondsToSelector:@selector(ntfConfig)]) config = [sv ntfConfig];
+        } else if ([self.superview.superview isKindOfClass:%c(WGWidgetPlatterView)]) {
+            config = configWidgets;
+        }
+    }
+
+    if (!config || ![config enabled]) return;
+
     if ([self icon] && [config hideIcon]) {
         if ([config style] == 0) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 25, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width + 50, self.titleLabel.frame.size.height);
         if ([config style] == 1) self.titleLabel.frame = CGRectMake(self.titleLabel.frame.origin.x - 30, self.titleLabel.frame.origin.y, self.titleLabel.frame.size.width + 50, self.titleLabel.frame.size.height);
@@ -538,7 +711,264 @@ void NTFTestBanner() {
     for (UIView *view in [self subviews]) {
         if ([view isKindOfClass:%c(NCNotificationListCoalescingHeaderCell)]) {
             cell = (NCNotificationListCoalescingHeaderCell *)view;
-            
+
+            if ([configNotifications colorizeBackground] && ![configNotifications dynamicBackgroundColor]) {
+                [cell ntfColorizeBackground:[configNotifications backgroundColor]];
+            }
+
+            if ([configNotifications colorizeHeader] && ![configNotifications dynamicHeaderColor]) {
+                [cell ntfColorizeHeader:[configNotifications headerColor]];
+            }
+
+            if ([configNotifications colorizeContent] && ![configNotifications dynamicContentColor]) {
+                [cell ntfColorizeContent:[configNotifications contentColor]];
+            }
+        } else if (cell && [view isKindOfClass:%c(NCNotificationListCell)]) {
+            UIColor *dynamicColor = ((NCNotificationListCell *)view).contentViewController.view.contentView.ntfDynamicColor;
+
+            if ([configNotifications colorizeBackground] && [configNotifications dynamicBackgroundColor]) {
+                [cell ntfColorizeBackground:dynamicColor];
+            }
+
+            if ([configNotifications colorizeHeader] && [configNotifications dynamicHeaderColor]) {
+                [cell ntfColorizeHeader:dynamicColor];
+            }
+
+            if ([configNotifications colorizeContent] && [configNotifications dynamicContentColor]) {
+                [cell ntfColorizeContent:dynamicColor];
+            }
+
+            cell = nil;
+        }
+    }
+}
+
+%end
+
+%end
+
+%group NotificaNotifications_iOS13
+
+/* -- NOTIFICATIONS */
+
+%hook NCNotificationShortLookViewController
+
+-(void)setNotificationRequest:(NCNotificationRequest *)arg1 {
+    %orig;
+    [self.view.contentView ntfColorize];
+}
+
+%end
+
+%hook NCNotificationViewControllerView
+
+-(void)layoutSubviews {
+    %orig;
+    NTFConfig *config = nil;
+    if ([self.contentView isKindOfClass:%c(NCNotificationShortLookView)]) {
+        NCNotificationShortLookView* sv = (NCNotificationShortLookView *)self.contentView;
+        config = [sv ntfConfig];
+    }
+
+    if (!config || ![config enabled]) return;
+
+    int count = [[self subviews] count];
+    for (UIView *subview in [self subviews]) {
+        if ([subview isKindOfClass:%c(PLPlatterView)]) {
+            count--;
+            PLPlatterView *view = (PLPlatterView *)subview;
+            [view setCornerRadius:[config cornerRadius]];
+            view.layer.cornerRadius = [config cornerRadius];
+            view.frame = CGRectMake(view.frame.origin.x, view.frame.origin.y + MODERNXI_Y_OFFSET, view.frame.size.width, view.frame.size.height - MODERNXI_Y_OFFSET);
+            double alpha = (([config backgroundBlurAlpha]/2)/(count)) + ([config backgroundBlurAlpha]/2);
+            view.alpha = alpha;
+
+            for (UIView *subsubview in view.subviews) {
+                if ([subsubview isKindOfClass:%c(MTMaterialView)]) {
+                    subsubview.layer.cornerRadius = [config cornerRadius];
+                    [((MTMaterialView *)subsubview) ntfSetCornerRadius:[config cornerRadius]];
+
+                    if ([config colorizeBackground]) {
+                        if ([config dynamicBackgroundColor]) {
+                            [((MTMaterialView *)subsubview) ntfColorize:self.contentView.ntfDynamicColor withBlurColor:[UIColor clearColor] alpha:[config backgroundBlurColorAlpha]];
+                        } else {
+                            [((MTMaterialView *)subsubview) ntfColorize:[config backgroundColor] withBlurColor:[UIColor clearColor] alpha:[config backgroundBlurColorAlpha]];
+                        }
+                    }
+
+                    if ([config outline]) {
+                        ((MTMaterialView *)subsubview).layer.borderWidth = [config outlineThickness];
+                        if ([config dynamicOutlineColor]) {
+                            ((MTMaterialView *)subsubview).layer.borderColor = self.contentView.ntfDynamicColor.CGColor;
+                        } else {
+                            ((MTMaterialView *)subsubview).layer.borderColor = [config outlineColor].CGColor;
+                        }
+                    }
+
+                    if ([config backgroundGradient]) {
+                        [((MTMaterialView *)subsubview) ntfGradient:[config backgroundGradientColor]];
+                    }
+                }
+            }
+        }
+    }
+}
+
+%end
+
+%hook NCNotificationListCell
+
+-(void)layoutSubviews {
+    %orig;
+
+    if ([configNotifications style] == 1) {
+        bool disableStyle = false;
+        if (self.contentViewController && self.contentViewController.notificationRequest) {
+            NCNotificationRequest *req = self.contentViewController.notificationRequest;
+            if (req.notificationIdentifier && req.bulletin && req.bulletin.sectionID) {
+                for (NSString *bundleId in notificationStyleBlacklist) {
+                    if ([req.bulletin.sectionID hasPrefix:bundleId]) {
+                        disableStyle = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!disableStyle) [self.contentViewController.view.contentView ntfRepositionHeader];
+    }
+
+    self.alpha = [configNotifications alpha];
+}
+
+-(void)setAlpha:(double)alpha {
+    if ([configNotifications alpha] != 1.0) {
+        alpha = [configNotifications alpha];
+    }
+
+    %orig;
+}
+
+%end
+
+%hook NCNotificationListCellActionButtonsView
+
+-(void)layoutSubviews {
+    if (![configNotifications enabled]) return;
+
+    if (!self.superview || !self.superview.superview || !self.superview.superview.superview) return;
+
+    NCNotificationListCell *cell = (NCNotificationListCell *)self.superview.superview.superview;
+
+    bool disableStyle = false;
+    if (cell.contentViewController.notificationRequest) {
+        NCNotificationRequest *req = cell.contentViewController.notificationRequest;
+        if (req.notificationIdentifier && req.bulletin && req.bulletin.sectionID) {
+            for (NSString *bundleId in notificationStyleBlacklist) {
+                if ([req.bulletin.sectionID hasPrefix:bundleId]) {
+                    disableStyle = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if ([configNotifications style] == 1 && !disableStyle) {
+        ntfMoveUpBy(-1 * MODERNXI_Y_OFFSET, self);
+    }
+
+    %orig;
+
+    UIColor *dynamicColor = cell.contentViewController.view.contentView.ntfDynamicColor;
+    self.clippingView.layer.cornerRadius = [configNotifications cornerRadius];
+    if (self.superview) {
+        self.superview.layer.cornerRadius = [configNotifications cornerRadius];
+    }
+
+    if ([configNotifications outline]) {
+        self.clippingView.layer.borderWidth = [configNotifications outlineThickness];
+        if ([configNotifications dynamicOutlineColor]) {
+            self.clippingView.layer.borderColor = dynamicColor.CGColor;
+        } else {
+            self.clippingView.layer.borderColor = [configNotifications outlineColor].CGColor;
+        }
+    }
+
+    for (NCNotificationListCellActionButton *button in self.buttonsStackView.arrangedSubviews) {
+        // button.backgroundView.alpha = 0.0;
+        // UIView *view = MSHookIvar<UIView *>(button.backgroundView, "_highlightView");
+        // view.alpha = [configNotifications backgroundBlurAlpha];
+        // if ([configNotifications colorizeBackground]) {
+        //     if ([configNotifications dynamicBackgroundColor]) {
+        //         [button.backgroundView ntfColorize:dynamicColor withBlurColor:[configNotifications blurColor] alpha:[configNotifications backgroundBlurColorAlpha]];
+        //     } else {
+        //         [button.backgroundView ntfColorize:[configNotifications backgroundColor] withBlurColor:[configNotifications blurColor] alpha:[configNotifications backgroundBlurColorAlpha]];
+        //     }
+        // }
+
+        if ([configNotifications outline]) {
+            button.backgroundView.layer.borderWidth = [configNotifications outlineThickness];
+            if ([configNotifications dynamicOutlineColor]) {
+                button.backgroundView.layer.borderColor = dynamicColor.CGColor;
+            } else {
+                button.backgroundView.layer.borderColor = [configNotifications outlineColor].CGColor;
+            }
+        }
+
+        if ([configNotifications colorizeContent]) {
+            [button.titleLabel.layer setFilters:nil];
+            if ([configNotifications dynamicContentColor]) {
+                [button.titleLabel setTextColor:dynamicColor];
+            } else {
+                [button.titleLabel setTextColor:[configNotifications contentColor]];
+            }
+        }
+    }
+}
+
+%end
+
+%hook NCNotificationListCoalescingHeaderCell
+
+%new;
+-(void)ntfColorizeHeader:(UIColor *)color {
+    [self.headerTitleView.titleLabel legibilitySettings].primaryColor = color;
+    [self.headerTitleView.titleLabel _updateLabelForLegibilitySettings];
+    [self.headerTitleView.titleLabel _updateLegibilityView];
+}
+
+%new;
+-(void)ntfColorizeContent:(UIColor *)color {
+    for (NCToggleControl *control in [self.coalescingControlsView.toggleControlPair toggleControls]) {
+        [[control _titleLabel].layer setFilters:nil];
+        [[control _titleLabel] setTextColor:color];
+
+        [[control _glyphView].layer setFilters:nil];
+        [[control _glyphView] setTintColor:color];
+    }
+}
+
+%new;
+-(void)ntfColorizeBackground:(UIColor *)color {
+    for (NCToggleControl *control in [self.coalescingControlsView.toggleControlPair toggleControls]) {
+        [[control _backgroundMaterialView] ntfColorize:color withBlurColor:[configNotifications blurColor] alpha:[configNotifications backgroundBlurColorAlpha]];
+    }
+}
+
+
+%end
+
+%hook NCNotificationListCollectionView
+
+-(void)layoutSubviews {
+    %orig;
+    if (![configExperimental colorizeSection]) return;
+
+    NCNotificationListCoalescingHeaderCell *cell = nil;
+    for (UIView *view in [self subviews]) {
+        if ([view isKindOfClass:%c(NCNotificationListCoalescingHeaderCell)]) {
+            cell = (NCNotificationListCoalescingHeaderCell *)view;
+
             if ([configNotifications colorizeBackground] && ![configNotifications dynamicBackgroundColor]) {
                 [cell ntfColorizeBackground:[configNotifications backgroundColor]];
             }
@@ -614,7 +1044,7 @@ void NTFTestBanner() {
     if ([config hideHeaderBackground]) {
         MSHookIvar<UILabel *>(self, "_headerOverlayView").hidden = YES;
     }
-    
+
     if (![self.ntfId isEqualToString:self.listItem.widgetIdentifier]) {
         if ([configExperimental hdIcons]) {
             if (self.widgetHost && self.widgetHost.appBundleID) {
@@ -639,7 +1069,7 @@ void NTFTestBanner() {
             }
         }
     }
-    
+
     UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
     if ([config style] == 1) {
         MSHookIvar<UILabel *>(self, "_headerOverlayView").hidden = YES;
@@ -682,7 +1112,7 @@ void NTFTestBanner() {
 %new
 -(void)ntfColorizeHeader:(UIColor *)color {
     MTPlatterHeaderContentView *headerContentView = [self _headerContentView];
-    
+
     // Taken from @the_casle's Nine.
     [[[headerContentView _dateLabel] layer] setFilters:nil];
     [[[headerContentView _titleLabel] layer] setFilters:nil];
@@ -708,9 +1138,9 @@ void NTFTestBanner() {
 
     [headerContentView setNeedsLayout];
     [headerContentView layoutIfNeeded];
-    
+
     ntfMoveUpBy(5, headerContentView);
-    
+
     bool isLTR = ([UIView userInterfaceLayoutDirectionForSemanticContentAttribute:self.semanticContentAttribute] != UIUserInterfaceLayoutDirectionRightToLeft);
     if (isLTR && headerContentView.bounds.origin.x - headerContentView.frame.origin.x == 0) {
         headerContentView.bounds = CGRectInset(headerContentView.bounds, -5.0f, 0);
@@ -780,6 +1210,247 @@ void NTFTestBanner() {
 
 %end
 
+%group NotificaWidgets_iOS13
+
+%hook WGWidgetPlatterView
+
+%new
+- (MTMaterialView *)backgroundMaterialView {
+    return MSHookIvar<MTMaterialView *>(self, "_backgroundView");
+}
+
+%property (nonatomic, retain) UIColor *ntfDynamicColor;
+
+-(void)setIcon:(UIImage *)arg1 {
+    %orig;
+    if (![self listItem]) return;
+    if (!arg1) return;
+    [self ntfColorize];
+}
+
+-(void)layoutSubviews {
+    %orig;
+    if (![self listItem]) return;
+
+    NTFConfig *config = [self ntfConfig];
+    if (!config || ![config enabled]) {
+        return;
+    }
+
+    for (UIView *subview in self.subviews) {
+        if ([subview isKindOfClass:%c(MTMaterialView)]) {
+            subview.layer.cornerRadius = [config cornerRadius];
+        }
+    }
+
+    if (self.contentView && self.contentView.superview) {
+        for (UIView *subview in self.contentView.superview.subviews) {
+            if ([subview isKindOfClass:%c(MTMaterialView)]) {
+                subview.hidden = YES;
+            }
+        }
+    }
+
+    if ([config hideHeaderBackground]) {
+        MSHookIvar<UILabel *>(self, "_headerBackgroundView").hidden = NO;
+    }
+
+    if ([config style] == 1) {
+        MSHookIvar<UILabel *>(self, "_headerBackgroundView").hidden = NO;
+        UIView *backgroundView;
+        for (UIView *subview in self.subviews) {
+            if ([subview isKindOfClass:%c(UIImageView)]) {
+                subview.hidden = YES;
+            }
+
+            if ([subview isKindOfClass:%c(MTMaterialView)]) {
+                if(!backgroundView) backgroundView = subview;
+                ntfMoveUpBy(-27, subview);
+            }
+        }
+
+        MTPlatterHeaderContentView *headerContentView =  MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
+        UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
+
+        if (iconButton) {
+            iconButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentFill;
+            iconButton.contentVerticalAlignment   = UIControlContentVerticalAlignmentFill;
+            iconButton.contentEdgeInsets = UIEdgeInsetsMake(5,5,5,5);
+
+            iconButton.layer.shadowRadius = 3.0f;
+            iconButton.layer.shadowColor = [UIColor blackColor].CGColor;
+            iconButton.layer.shadowOffset = CGSizeMake(0.0f, 1.0f);
+            iconButton.layer.shadowOpacity = 0.5f;
+            iconButton.layer.masksToBounds = NO;
+        }
+
+        for (UIView *subview in self.widgetHost.view.subviews) {
+            if ([subview isKindOfClass:%c(_UISizeTrackingView)]) {
+                CGRect origRect = subview.frame;
+                CGRect backRect = backgroundView.frame;
+                subview.frame = CGRectMake(0, origRect.size.height-backRect.size.height+18, backRect.size.width, origRect.size.height);
+            }
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            MTPlatterHeaderContentView *headerContentView =  MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
+            UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
+
+            if (iconButton) {
+                iconButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentFill;
+                iconButton.contentVerticalAlignment   = UIControlContentVerticalAlignmentFill;
+                iconButton.contentEdgeInsets = UIEdgeInsetsMake(5,5,5,5);
+
+                iconButton.layer.shadowRadius = 3.0f;
+                iconButton.layer.shadowColor = [UIColor blackColor].CGColor;
+                iconButton.layer.shadowOffset = CGSizeMake(0.0f, 1.0f);
+                iconButton.layer.shadowOpacity = 0.5f;
+                iconButton.layer.masksToBounds = NO;
+            }
+            ntfMoveUpBy(-27, self.widgetHost.view);
+
+            // for (UIView *subview in self.widgetHost.view.subviews) {
+            //     if ([subview isKindOfClass:%c(_UISizeTrackingView)]) {
+            //         ntfMoveUpBy(-27, subview);
+            //     }
+            // }
+
+          });
+        });
+
+        [self ntfRepositionHeader];
+    }
+
+    [self ntfHideStuff];
+    [self ntfColorize];
+}
+
+%new
+-(NTFConfig *)ntfConfig {
+    return configWidgets;
+}
+
+%new
+-(void)ntfColorizeHeader:(UIColor *)color {
+    NTFConfig *config = [self ntfConfig];
+    if (!config || ![config enabled]) {
+        return;
+    }
+
+    MTPlatterHeaderContentView *headerContentView = MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
+    
+    // Taken from @the_casle's Nine.
+    [[[headerContentView _dateLabel] layer] setFilters:nil];
+    [[[headerContentView _titleLabel] layer] setFilters:nil];
+
+    [headerContentView setTintColor:color];
+    [[headerContentView _dateLabel] setTextColor:color];
+    [[headerContentView _titleLabel] setTextColor:color];
+
+    if ([self showMoreButton]) {
+        [[[[self showMoreButton] titleLabel] layer] setFilters:nil];
+        [[self showMoreButton] setTitleColor:color forState:UIControlStateNormal];
+    }
+}
+
+%new
+-(void)ntfColorizeContent:(UIColor *)color {
+}
+
+%new
+-(void)ntfRepositionHeader {
+    NTFConfig *config = [self ntfConfig];
+    if (!config || ![config enabled]) {
+        return;
+    }
+
+    MTPlatterHeaderContentView *headerContentView = MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
+    if (headerContentView.frame.origin.y != 0) return;
+
+    [headerContentView setNeedsLayout];
+    [headerContentView layoutIfNeeded];
+    
+    ntfMoveUpBy(5, headerContentView);
+    
+    if (headerContentView.bounds.origin.x - headerContentView.frame.origin.x == 0) {
+        headerContentView.bounds = CGRectInset(headerContentView.bounds, -5.0f, 0);
+    }
+
+    if ([config style] == 1) {
+        headerContentView.titleLabel.frame = CGRectMake(headerContentView.titleLabel.frame.origin.x + 5, headerContentView.titleLabel.frame.origin.y, headerContentView.titleLabel.frame.size.width - 5, headerContentView.titleLabel.frame.size.height);
+    }
+}
+
+%new
+-(void)ntfColorize {
+    NTFConfig *config = [self ntfConfig];
+    if (!config || ![config enabled]) {
+        return;
+    }
+
+    self.ntfDynamicColor = nil;
+
+    if ([config dynamicBackgroundColor] || [config dynamicHeaderColor] || [config dynamicContentColor]) {
+        MTPlatterHeaderContentView *headerContentView = MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
+        UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
+        if (iconButton) {
+            self.ntfDynamicColor = [NEPColorUtils averageColor:iconButton.imageView.image withAlpha:1.0];
+        } else {
+            self.ntfDynamicColor = [config backgroundColor];
+        }
+    }
+
+    if (!self.backgroundMaterialView) return;
+    self.backgroundMaterialView.hidden = NO;
+    [self.backgroundMaterialView ntfSetCornerRadius:[config cornerRadius]];
+    UIView *view = MSHookIvar<UIView *>(self.backgroundMaterialView, "_highlightView");
+    view.alpha = [config backgroundBlurAlpha];
+    if ([config colorizeBackground]) {
+        if ([config dynamicBackgroundColor]) {
+            [self.backgroundMaterialView ntfColorize:self.ntfDynamicColor withBlurColor:[config blurColor] alpha:[config backgroundBlurColorAlpha]];
+        } else {
+            [self.backgroundMaterialView ntfColorize:[config backgroundColor] withBlurColor:[config blurColor] alpha:[config backgroundBlurColorAlpha]];
+        }
+    }
+
+    if ([config backgroundGradient]) {
+        [self.backgroundMaterialView ntfGradient:[config backgroundGradientColor]];
+    }
+
+    if ([config colorizeHeader]) {
+        if ([config dynamicHeaderColor]) {
+            [self ntfColorizeHeader:self.ntfDynamicColor];
+        } else {
+            [self ntfColorizeHeader:[config headerColor]];
+        }
+    }
+
+    if ([config colorizeContent]) {
+        if ([config dynamicContentColor]) {
+            [self ntfColorizeContent:self.ntfDynamicColor];
+        } else {
+            [self ntfColorizeContent:[config contentColor]];
+        }
+    }
+
+    [self ntfHideStuff];
+}
+
+%new
+-(void)ntfHideStuff {
+    NTFConfig *config = [self ntfConfig];
+    MTPlatterHeaderContentView *headerContentView = MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
+    [[headerContentView _titleLabel] setHidden:[config hideAppName]];
+
+    UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
+    [iconButton setHidden:[config hideIcon]];
+}
+
+%end
+
+%end
+
 /* -- DETAILS */
 
 %group NotificaDetails
@@ -812,7 +1483,7 @@ void NTFTestBanner() {
     if (self.nextResponder.nextResponder.nextResponder) {
         controller = (UIViewController*)self.nextResponder.nextResponder.nextResponder;
     }
-    
+
     MTPlatterHeaderContentView *headerContentView = MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
     UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
 
@@ -842,7 +1513,7 @@ void NTFTestBanner() {
 %new
 -(void)ntfColorizeHeader:(UIColor *)color {
     MTPlatterHeaderContentView *headerContentView = MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
-    
+
     // Taken from @the_casle's Nine.
     [[[headerContentView _titleLabel] layer] setFilters:nil];
 
@@ -988,7 +1659,7 @@ void NTFTestBanner() {
             ((UILabel *)[((NCNotificationShortLookViewController *)controller) sxiNotificationCount]).textAlignment = NSTextAlignmentCenter;
         }
     }
-    
+
     bool disableStyle = false;
     if (controller && [controller isKindOfClass:%c(NCNotificationShortLookViewController)] && ((NCNotificationShortLookViewController *)controller).notificationRequest) {
         NCNotificationRequest *req = ((NCNotificationShortLookViewController *)controller).notificationRequest;
@@ -1049,7 +1720,7 @@ void NTFTestBanner() {
 %new
 -(NTFConfig *)ntfConfig {
     if (![[self _viewControllerForAncestor] respondsToSelector:@selector(delegate)]) return nil;
-    
+
     if ([[[self _viewControllerForAncestor] delegate] isKindOfClass:%c(SBNotificationBannerDestination)]) {
         return configBanners;
     } else {
@@ -1060,7 +1731,7 @@ void NTFTestBanner() {
 %new
 -(void)ntfColorizeHeader:(UIColor *)color {
     MTPlatterHeaderContentView *headerContentView = [self _headerContentView];
-    
+
     // Taken from @the_casle's Nine.
     [[[headerContentView _dateLabel] layer] setFilters:nil];
     [[[headerContentView _titleLabel] layer] setFilters:nil];
@@ -1103,9 +1774,9 @@ void NTFTestBanner() {
 
     [headerContentView setNeedsLayout];
     [headerContentView layoutIfNeeded];
-    
+
     ntfMoveUpBy(5, headerContentView);
-    
+
     bool isLTR = ([UIView userInterfaceLayoutDirectionForSemanticContentAttribute:self.semanticContentAttribute] != UIUserInterfaceLayoutDirectionRightToLeft);
     if (isLTR && headerContentView.bounds.origin.x - headerContentView.frame.origin.x == 0) {
         headerContentView.bounds = CGRectInset(headerContentView.bounds, -5.0f, 0);
@@ -1228,6 +1899,250 @@ void NTFTestBanner() {
 
 %end
 
+%group NotificaNotificationsBanners_iOS13
+
+%hook NCNotificationShortLookView
+
+%property (nonatomic, retain) UIColor *ntfDynamicColor;
+%property (nonatomic, retain) NSString *ntfId;
+
+-(void)setIcon:(UIImage *)arg1 {
+    %orig;
+    if (!arg1) return;
+    [self ntfColorize];
+}
+
+-(void)layoutSubviews {
+    %orig;
+
+    NTFConfig *config = [self ntfConfig];
+    if (!config || ![config enabled]) return; // do not remove that; breaks banners
+
+    UIViewController *controller = nil;
+    if (self.nextResponder.nextResponder.nextResponder) {
+        controller = (UIViewController*)self.nextResponder.nextResponder.nextResponder;
+    }
+
+    MTPlatterHeaderContentView *headerContentView = [self _headerContentView];
+
+    for (UIView *subview in self.subviews) {
+        if ([subview isKindOfClass:%c(MTMaterialView)]) {
+            subview.layer.cornerRadius = [config cornerRadius];
+            subview.hidden = YES;
+        }
+    }
+
+    self.backgroundMaterialView.hidden = NO;
+
+    if ([config centerText]) {
+        ((UITextView *)[[self _notificationContentView] _secondaryTextView]).textAlignment = NSTextAlignmentCenter;
+        ((UILabel *)[[self _notificationContentView] _primaryLabel]).textAlignment = NSTextAlignmentCenter;
+        ((UILabel *)[[self _notificationContentView] _primarySubtitleLabel]).textAlignment = NSTextAlignmentCenter;
+        if ([[self _notificationContentView] respondsToSelector:@selector(_secondaryLabel)]) ((UILabel *)[[self _notificationContentView] _secondaryLabel]).textAlignment = NSTextAlignmentCenter;
+        if ([[self _notificationContentView] respondsToSelector:@selector(_summaryLabel)]) ((UILabel *)[[self _notificationContentView] _summaryLabel]).textAlignment = NSTextAlignmentCenter;
+
+        // StackXI compatibility
+        if ([controller isKindOfClass:%c(NCNotificationShortLookViewController)] && [controller respondsToSelector:@selector(sxiNotificationCount)]) {
+            ((UILabel *)[((NCNotificationShortLookViewController *)controller) sxiNotificationCount]).textAlignment = NSTextAlignmentCenter;
+        }
+    }
+
+    bool disableStyle = false;
+    if (controller && [controller isKindOfClass:%c(NCNotificationShortLookViewController)] && ((NCNotificationShortLookViewController *)controller).notificationRequest) {
+        NCNotificationRequest *req = ((NCNotificationShortLookViewController *)controller).notificationRequest;
+        if (req.notificationIdentifier && req.bulletin && req.bulletin.sectionID) {
+            for (NSString *bundleId in notificationStyleBlacklist) {
+                if ([req.bulletin.sectionID hasPrefix:bundleId]) {
+                    disableStyle = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
+    if ([config style] == 1 && !disableStyle) {
+        // headerContentView.titleLabel.bounds = CGRectMake(headerContentView.titleLabel.bounds.origin.x-20, headerContentView.titleLabel.bounds.origin.y, headerContentView.titleLabel.bounds.size.width, headerContentView.titleLabel.bounds.size.height);
+        for (UIView *subview in self.subviews) {
+            if ([subview isKindOfClass:%c(UIImageView)]) {
+                subview.hidden = YES;
+            }
+
+            if ([subview isKindOfClass:%c(MTMaterialView)]) {
+                ntfMoveUpBy(-1 * MODERNXI_Y_OFFSET, subview);
+                if(subview.frame.origin.y != MODERNXI_Y_OFFSET) subview.frame = CGRectMake(subview.frame.origin.x, subview.frame.origin.y, subview.frame.size.width, subview.frame.size.height-MODERNXI_Y_OFFSET);
+            }
+        }
+
+        if (iconButton) {
+            iconButton.contentHorizontalAlignment = UIControlContentHorizontalAlignmentFill;
+            iconButton.contentVerticalAlignment   = UIControlContentVerticalAlignmentFill;
+            iconButton.contentEdgeInsets = UIEdgeInsetsMake(5,5,5,5);
+            
+
+            if (![configExperimental disableIconShadow]) {
+                iconButton.layer.shadowRadius = 3.0f;
+                iconButton.layer.shadowColor = [UIColor blackColor].CGColor;
+                iconButton.layer.shadowOffset = CGSizeMake(0.0f, 1.0f);
+                iconButton.layer.shadowOpacity = 0.5f;
+            }
+            iconButton.layer.masksToBounds = NO;
+        }
+
+        [self ntfRepositionHeader];
+    }
+    if (iconButton) iconButton.imageView.layer.cornerRadius = [[self ntfConfig] iconCornerRadius];
+
+    if ([[[self _viewControllerForAncestor] delegate] isKindOfClass:%c(SBNotificationBannerDestination)]) {
+        [self ntfColorize];
+    }
+
+    if ([config colorizeHeader]) {
+        if ([config dynamicHeaderColor]) {
+            [self ntfColorizeHeader:self.ntfDynamicColor];
+        } else {
+            [self ntfColorizeHeader:[config headerColor]];
+        }
+    }
+    [self ntfHideStuff];
+}
+
+%new
+-(NTFConfig *)ntfConfig {
+    if (![[self _viewControllerForAncestor] respondsToSelector:@selector(delegate)]) return nil;
+
+    if ([[[self _viewControllerForAncestor] delegate] isKindOfClass:%c(SBNotificationBannerDestination)]) {
+        return configBanners;
+    } else {
+        return configNotifications;
+    }
+}
+
+%new
+-(void)ntfColorizeHeader:(UIColor *)color {
+    MTPlatterHeaderContentView *headerContentView = [self _headerContentView];
+
+    // Taken from @the_casle's Nine.
+    [[[headerContentView _dateLabel] layer] setFilters:nil];
+    [[[headerContentView _titleLabel] layer] setFilters:nil];
+
+    [headerContentView setTintColor:color];
+    [[headerContentView _dateLabel] setTextColor:color];
+    [[headerContentView _titleLabel] setTextColor:color];
+
+    if ([self respondsToSelector:@selector(nanoAppLabel)]) {
+        [self.nanoAppLabel setTextColor:color];
+    }
+}
+
+%new
+-(void)ntfColorizeContent:(UIColor *)color {
+    [[[self _notificationContentView] _secondaryTextView] setTextColor:color];
+    [[[self _notificationContentView] _primaryLabel] setTextColor:color];
+    [[[self _notificationContentView] _primarySubtitleLabel] setTextColor:color];
+    if ([[self _notificationContentView] respondsToSelector:@selector(_secondaryLabel)]) [[[self _notificationContentView] _secondaryLabel] setTextColor:color];
+    if ([[self _notificationContentView] respondsToSelector:@selector(_summaryLabel)]) {
+        [[[[self _notificationContentView] _summaryLabel] layer] setFilters:nil];
+        [[[[[self _notificationContentView] _summaryLabel] contentLabel] layer] setFilters:nil];
+        [[[self _notificationContentView] _summaryLabel] setTextColor:color];
+        [[[[self _notificationContentView] _summaryLabel] contentLabel] setTextColor:color];
+    }
+
+    if ([self respondsToSelector:@selector(nanoTitleLabel)]) {
+        [self.nanoTitleLabel setTextColor:color];
+    }
+
+    if ([self respondsToSelector:@selector(nanoTextLabel)]) {
+        [self.nanoTextLabel setTextColor:color];
+    }
+}
+
+%new
+-(void)ntfRepositionHeader {
+    MTPlatterHeaderContentView *headerContentView = [self _headerContentView];
+
+    if (headerContentView.frame.origin.y != 0) return;
+
+    [headerContentView setNeedsLayout];
+    [headerContentView layoutIfNeeded];
+
+    ntfMoveUpBy(5, headerContentView);
+
+    bool isLTR = ([UIView userInterfaceLayoutDirectionForSemanticContentAttribute:self.semanticContentAttribute] != UIUserInterfaceLayoutDirectionRightToLeft);
+    if (isLTR && headerContentView.bounds.origin.x - headerContentView.frame.origin.x == 0) {
+        headerContentView.bounds = CGRectInset(headerContentView.bounds, -5.0f, 0);
+    }
+}
+
+%new
+-(void)ntfColorize {
+    NTFConfig *config = [self ntfConfig];
+    if (!config || ![config enabled]) {
+        return;
+    }
+
+    self.ntfDynamicColor = nil;
+
+    if ([config dynamicBackgroundColor] || [config dynamicHeaderColor] || [config dynamicContentColor]) {
+        MTPlatterHeaderContentView *headerContentView = MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
+        UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
+        if (iconButton) {
+            self.ntfDynamicColor = [NEPColorUtils averageColor:iconButton.imageView.image withAlpha:1.0];
+        } else {
+            self.ntfDynamicColor = [config backgroundColor];
+        }
+    }
+
+    if (!self.backgroundMaterialView) return;
+    [self.backgroundMaterialView ntfSetCornerRadius:[config cornerRadius]];
+    UIView *view = MSHookIvar<UIView *>(self.backgroundMaterialView, "_highlightView");
+    view.alpha = [config backgroundBlurAlpha];
+    if ([config colorizeBackground]) {
+        if ([config dynamicBackgroundColor]) {
+            [self.backgroundMaterialView ntfColorize:self.ntfDynamicColor withBlurColor:[config blurColor] alpha:[config backgroundBlurColorAlpha]];
+        } else {
+            [self.backgroundMaterialView ntfColorize:[config backgroundColor] withBlurColor:[config blurColor] alpha:[config backgroundBlurColorAlpha]];
+        }
+    }
+
+    if ([config backgroundGradient]) {
+        [self.backgroundMaterialView ntfGradient:[config backgroundGradientColor]];
+    }
+
+    if ([config colorizeHeader]) {
+        if ([config dynamicHeaderColor]) {
+            [self ntfColorizeHeader:self.ntfDynamicColor];
+        } else {
+            [self ntfColorizeHeader:[config headerColor]];
+        }
+    }
+
+    if ([config colorizeContent]) {
+        if ([config dynamicContentColor]) {
+            [self ntfColorizeContent:self.ntfDynamicColor];
+        } else {
+            [self ntfColorizeContent:[config contentColor]];
+        }
+    }
+
+    [self ntfHideStuff];
+}
+
+%new
+-(void)ntfHideStuff {
+    NTFConfig *config = [self ntfConfig];
+    MTPlatterHeaderContentView *headerContentView = [self _headerContentView];
+    [[headerContentView _dateLabel] setHidden:[config hideTime]];
+    [[headerContentView _titleLabel] setHidden:[config hideAppName]];
+
+    UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
+    [iconButton setHidden:[config hideIcon]];
+}
+
+%end
+
+%end
+
 /* -- NOW PLAYING */
 
 %group NotificaNowPlaying
@@ -1286,7 +2201,7 @@ void NTFTestBanner() {
 %new
 -(void)ntfReadjustColorBasedOnArtwork {
     if (![self respondsToSelector:@selector(customContentView)]) return; //iOS 12.2 "compatibility"
-    
+
     NTFConfig *config = configNowPlaying;
     if (!config || ![config enabled] || ![config colorizeBackground] || ![config dynamicBackgroundColor] || !self.ntfDynamicColor) return;
     if (!self.customContentView || ![self.customContentView subviews] || [[self.customContentView subviews] count] == 0) return;
@@ -1294,7 +2209,7 @@ void NTFTestBanner() {
     SBDashBoardMediaControlsView *view = (SBDashBoardMediaControlsView *)[self.customContentView subviews][0];
     MediaControlsPanelViewController *mcpvc = MSHookIvar<MediaControlsPanelViewController *>(view.nextResponder, "_mediaControlsPanelViewController");
     if (!mcpvc || !mcpvc.headerView || !mcpvc.headerView.artworkView || !mcpvc.headerView.artworkView.image || !self.backgroundMaterialView) return;
-    
+
     [self.backgroundMaterialView ntfColorize:self.ntfDynamicColor withBlurColor:[config blurColor] alpha:[config backgroundBlurColorAlpha]];
 
     if ([config outline]) {
@@ -1312,7 +2227,7 @@ void NTFTestBanner() {
 %new
 -(void)ntfColorize {
     if (![self respondsToSelector:@selector(customContentView)]) return; //iOS 12.2 "compatibility"
-    
+
     NTFConfig *config = configNowPlaying;
     self.ntfDynamicColor = [NTFManager sharedInstance].lastArtworkColor;
     for (UIView *v in [self subviews]) {
@@ -1459,6 +2374,102 @@ void NTFTestBanner() {
 
 %end
 
+
+
+
+%group NotificaNC_iOS13
+
+/* -- Notification spacing */
+
+%hook NCNotificationListCollectionViewFlowLayout
+-(double)itemSpacing {
+    return [configNC notificationSpacing];
+}
+%end
+
+/* -- Hide "no older notifications" */
+
+%hook NCNotificationListSectionRevealHintView
+-(void)layoutSubviews {
+    %orig;
+    MSHookIvar<UILabel *>(self, "_revealHintTitle").hidden = [configNC hideNoOlder];
+}
+%end
+
+/* -- Vertical offset */
+
+%hook CSCombinedListViewController
+-(UIEdgeInsets) _listViewDefaultContentInsets {
+    UIEdgeInsets orig = %orig;
+    double verticalOffset = [configNC verticalOffset];
+    orig.top += verticalOffset;
+    return orig;
+}
+-(void) _layoutListView {
+    %orig;
+    [self _updateListViewContentInset];
+}
+-(double) _minInsetsToPushDateOffScreen {
+    double orig = %orig;
+    double verticalOffset = [configNC verticalOffset];
+    return orig + verticalOffset;
+}
+%end
+
+/* -- Pull to clear all */
+
+%hook SBCoverSheetPrimarySlidingViewController
+-(id)initWithContentViewController:(id)arg1 canBePulledDown:(BOOL)arg2 canBePulledUp:(BOOL)arg3 dismissalPreemptingGestureRecognizer:(id)arg4 {
+    id orig = %orig;
+    sbcspsvc = orig;
+    return orig;
+}
+%end
+
+%hook NCNotificationStructuredListViewController
+-(void)notificationMasterList:(id)arg1 scrollViewDidScroll:(UIScrollView *)scrollView {
+// -(void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    %orig;
+
+    if (![configNC pullToClearAll]) return;
+    if ([sbcspsvc isTransitioning]) return;
+
+    double verticalOffset = [configNC verticalOffset];
+    if (scrollView.contentOffset.y - 250 >= (scrollView.contentSize.height - scrollView.bounds.size.height - verticalOffset)) negativePull = YES;
+
+    if (scrollView.contentOffset.y < (scrollView.contentSize.height - scrollView.bounds.size.height - verticalOffset) && negativePull) {
+        AudioServicesPlaySystemSound(1519);
+        
+
+        NSArray *array = [NSMutableArray array];
+        NCNotificationMasterList *masterList = [self masterList];
+        for(NCNotificationStructuredSectionList *item in [masterList notificationSections]) {
+            array = [array arrayByAddingObjectsFromArray:[item allNotificationRequests]];
+        }
+        for(NCNotificationRequest *request in array) {
+            [self removeNotificationRequest:request];
+        }
+
+        negativePull = NO;
+    }
+}
+%end
+
+/* -- Disable Idle Timer */
+
+%hook SBDashBoardIdleTimerProvider
+-(bool)isIdleTimerEnabled {
+    if ([configExperimental idleTimerDisabled]) return false;
+
+    return %orig;
+}
+%end
+
+
+%end
+
+
+
 %group NotificaSB
 
 %hook SpringBoard
@@ -1566,20 +2577,20 @@ void NTFTestBanner() {
 
 %end
 
-%ctor{
+%ctor {
     if (![NSProcessInfo processInfo]) return;
     NSString *processName = [NSProcessInfo processInfo].processName;
     bool isSpringboard = [@"SpringBoard" isEqualToString:processName];
-    dpkgInvalid = ![[NSFileManager defaultManager] fileExistsAtPath:@"/var/lib/dpkg/info/me.nepeta.notifica.list"];
+    dpkgInvalid = ![[NSFileManager defaultManager] fileExistsAtPath:@"/var/lib/dpkg/info/com.rpgfarm.notifica.list"];
 
     if (isSpringboard) {
         HBPreferences *file = [[HBPreferences alloc] initWithIdentifier:@"me.nepeta.notifica"];
         NSMutableDictionary *colors = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/me.nepeta.notifica-colors.plist"];
         enabled = [([file objectForKey:@"Enabled"] ?: @(YES)) boolValue] && !dpkgInvalid;
-        
+
         if (dpkgInvalid) %init(NotificaSB);
         if (!enabled) return;
-        
+
         NSLog(@"[Notifica] init");
 
         if (enabled) {
@@ -1591,14 +2602,28 @@ void NTFTestBanner() {
             configNowPlaying = [[NTFConfig alloc] initWithSub:@"NowPlaying" prefs:file colors:colors];
             configExperimental = [[NTFConfig alloc] initWithSub:@"Experimental" prefs:file colors:colors];
 
-            %init(Notifica);
-            %init(NotificaNC);
-
-            if ([configNotifications enabled] || [configBanners enabled]) %init(NotificaNotificationsBanners);
-            if ([configNotifications enabled]) %init(NotificaNotifications);
-            if ([configWidgets enabled]) %init(NotificaWidgets);
             if ([configDetails enabled]) %init(NotificaDetails);
             if ([configNowPlaying enabled]) %init(NotificaNowPlaying);
+            float version = [[[UIDevice currentDevice] systemVersion] floatValue];
+            if(version >= 13) {
+              %init(Notifica_iOS13);
+              %init(NotificaNC_iOS13);
+
+              if ([configNotifications enabled] || [configBanners enabled]) %init(NotificaNotificationsBanners_iOS13);
+              if ([configNotifications enabled]) %init(NotificaNotifications_iOS13);
+              if ([configWidgets enabled]) %init(NotificaWidgets_iOS13);
+              // if ([configDetails enabled]) %init(NotificaDetails);
+              // if ([configNowPlaying enabled]) %init(NotificaNowPlaying);
+            } else {
+              %init(Notifica);
+              %init(NotificaNC);
+
+              if ([configNotifications enabled] || [configBanners enabled]) %init(NotificaNotificationsBanners);
+              if ([configNotifications enabled]) %init(NotificaNotifications);
+              if ([configWidgets enabled]) %init(NotificaWidgets);
+              // if ([configDetails enabled]) %init(NotificaDetails);
+              // if ([configNowPlaying enabled]) %init(NotificaNowPlaying);
+            }
         }
 
         %init(NotificaNotificationTest);
