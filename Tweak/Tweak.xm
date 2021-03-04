@@ -20,6 +20,8 @@ static NTFConfig *configDetails = nil;
 static NTFConfig *configNowPlaying = nil;
 static NTFConfig *configExperimental = nil;
 
+float version;
+
 static NSMutableDictionary *colorCache = [NSMutableDictionary new];
 static NSArray *notificationStyleBlacklist = @[
     @"com.laughingquoll.AirPower",
@@ -765,49 +767,46 @@ void NTFTestBanner() {
 -(void)layoutSubviews {
     %orig;
     NTFConfig *config = nil;
+    NCNotificationShortLookView* sv;
     if ([self.contentView isKindOfClass:%c(NCNotificationShortLookView)]) {
-        NCNotificationShortLookView* sv = (NCNotificationShortLookView *)self.contentView;
+        sv = (NCNotificationShortLookView *)self.contentView;
         config = [sv ntfConfig];
     }
 
     if (!config || ![config enabled]) return;
 
-    int count = [[self subviews] count];
-    for (UIView *subview in [self subviews]) {
-        if ([subview isKindOfClass:%c(PLPlatterView)]) {
-            count--;
-            PLPlatterView *view = (PLPlatterView *)subview;
-            [view setCornerRadius:[config cornerRadius]];
-            view.layer.cornerRadius = [config cornerRadius];
-            view.frame = CGRectMake(view.frame.origin.x, view.frame.origin.y + MODERNXI_Y_OFFSET, view.frame.size.width, view.frame.size.height - MODERNXI_Y_OFFSET);
-            double alpha = (([config backgroundBlurAlpha]/2)/(count)) + ([config backgroundBlurAlpha]/2);
-            view.alpha = alpha;
+    if (sv && [sv isKindOfClass:%c(PLPlatterView)]) {
+        PLPlatterView *view = (PLPlatterView *)sv;
+        [view setCornerRadius:[config cornerRadius]];
+        view.layer.cornerRadius = [config cornerRadius];
+        // view.frame = CGRectMake(view.frame.origin.x, view.frame.origin.y + MODERNXI_Y_OFFSET, view.frame.size.width, view.frame.size.height - MODERNXI_Y_OFFSET);
+        double alpha = [config backgroundBlurAlpha]/2 + [config backgroundBlurAlpha]/2;
+        view.alpha = alpha;
 
-            for (UIView *subsubview in view.subviews) {
-                if ([subsubview isKindOfClass:%c(MTMaterialView)]) {
-                    subsubview.layer.cornerRadius = [config cornerRadius];
-                    [((MTMaterialView *)subsubview) ntfSetCornerRadius:[config cornerRadius]];
+        for (UIView *subsubview in view.subviews) {
+            if ([subsubview isKindOfClass:%c(MTMaterialView)]) {
+                subsubview.layer.cornerRadius = [config cornerRadius];
+                [((MTMaterialView *)subsubview) ntfSetCornerRadius:[config cornerRadius]];
 
-                    if ([config colorizeBackground]) {
-                        if ([config dynamicBackgroundColor]) {
-                            [((MTMaterialView *)subsubview) ntfColorize:self.contentView.ntfDynamicColor withBlurColor:[UIColor clearColor] alpha:[config backgroundBlurColorAlpha]];
-                        } else {
-                            [((MTMaterialView *)subsubview) ntfColorize:[config backgroundColor] withBlurColor:[UIColor clearColor] alpha:[config backgroundBlurColorAlpha]];
-                        }
+                if ([config colorizeBackground]) {
+                    if ([config dynamicBackgroundColor]) {
+                        [((MTMaterialView *)subsubview) ntfColorize:self.contentView.ntfDynamicColor withBlurColor:[UIColor clearColor] alpha:[config backgroundBlurColorAlpha]];
+                    } else {
+                        [((MTMaterialView *)subsubview) ntfColorize:[config backgroundColor] withBlurColor:[UIColor clearColor] alpha:[config backgroundBlurColorAlpha]];
                     }
+                }
 
-                    if ([config outline]) {
-                        ((MTMaterialView *)subsubview).layer.borderWidth = [config outlineThickness];
-                        if ([config dynamicOutlineColor]) {
-                            ((MTMaterialView *)subsubview).layer.borderColor = self.contentView.ntfDynamicColor.CGColor;
-                        } else {
-                            ((MTMaterialView *)subsubview).layer.borderColor = [config outlineColor].CGColor;
-                        }
+                if ([config outline]) {
+                    ((MTMaterialView *)subsubview).layer.borderWidth = [config outlineThickness];
+                    if ([config dynamicOutlineColor]) {
+                        ((MTMaterialView *)subsubview).layer.borderColor = self.contentView.ntfDynamicColor.CGColor;
+                    } else {
+                        ((MTMaterialView *)subsubview).layer.borderColor = [config outlineColor].CGColor;
                     }
+                }
 
-                    if ([config backgroundGradient]) {
-                        [((MTMaterialView *)subsubview) ntfGradient:[config backgroundGradientColor]];
-                    }
+                if ([config backgroundGradient]) {
+                    [((MTMaterialView *)subsubview) ntfGradient:[config backgroundGradientColor]];
                 }
             }
         }
@@ -2604,14 +2603,14 @@ void NTFTestBanner() {
 
             if ([configDetails enabled]) %init(NotificaDetails);
             if ([configNowPlaying enabled]) %init(NotificaNowPlaying);
-            float version = [[[UIDevice currentDevice] systemVersion] floatValue];
+            version = [[[UIDevice currentDevice] systemVersion] floatValue];
             if(version >= 13) {
               %init(Notifica_iOS13);
               %init(NotificaNC_iOS13);
 
               if ([configNotifications enabled] || [configBanners enabled]) %init(NotificaNotificationsBanners_iOS13);
               if ([configNotifications enabled]) %init(NotificaNotifications_iOS13);
-              if ([configWidgets enabled]) %init(NotificaWidgets_iOS13);
+              if ([configWidgets enabled] && version < 14) %init(NotificaWidgets_iOS13);
               // if ([configDetails enabled]) %init(NotificaDetails);
               // if ([configNowPlaying enabled]) %init(NotificaNowPlaying);
             } else {
