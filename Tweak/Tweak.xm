@@ -1900,6 +1900,12 @@ void NTFTestBanner() {
 
 %group NotificaNotificationsBanners_iOS13
 
+%hook NCNotificationListCache
+-(BOOL)recycleNotificationListCell:(id)arg1 {
+    return false;
+}
+%end
+
 %hook NCNotificationShortLookView
 
 %property (nonatomic, retain) UIColor *ntfDynamicColor;
@@ -1992,9 +1998,7 @@ void NTFTestBanner() {
     }
     if (iconButton) iconButton.imageView.layer.cornerRadius = [[self ntfConfig] iconCornerRadius];
 
-    if ([[[self _viewControllerForAncestor] delegate] isKindOfClass:%c(SBNotificationBannerDestination)]) {
-        [self ntfColorize];
-    }
+    [self ntfColorize];
 
     if ([config colorizeHeader]) {
         if ([config dynamicHeaderColor]) {
@@ -2081,16 +2085,10 @@ void NTFTestBanner() {
     }
 
     self.ntfDynamicColor = nil;
-
-    if ([config dynamicBackgroundColor] || [config dynamicHeaderColor] || [config dynamicContentColor]) {
-        MTPlatterHeaderContentView *headerContentView = MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
-        UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
-        if (iconButton) {
-            self.ntfDynamicColor = [NEPColorUtils averageColor:iconButton.imageView.image withAlpha:1.0];
-        } else {
-            self.ntfDynamicColor = [config backgroundColor];
-        }
-    }
+    MTPlatterHeaderContentView *headerContentView = MSHookIvar<MTPlatterHeaderContentView *>(self, "_headerContentView");
+    UIButton *iconButton = ntfGetIconButtonFromHCV(headerContentView);
+    if (iconButton) self.ntfDynamicColor = [NEPColorUtils averageColor:iconButton.imageView.image withAlpha:1.0];
+    else self.ntfDynamicColor = [config backgroundColor];
 
     if (!self.backgroundMaterialView) return;
     [self.backgroundMaterialView ntfSetCornerRadius:[config cornerRadius]];
