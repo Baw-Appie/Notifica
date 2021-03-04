@@ -23,7 +23,7 @@
             [specifier setProperty:[prefix stringByAppendingString:key] forKey:@"key"];
         }
 
-        NSMutableDictionary *dict = [specifier propertyForKey:@"libcolorpicker"];
+        NSMutableDictionary *dict = [[specifier propertyForKey:@"libcolorpicker"] mutableCopy];
         if (dict) {
             dict[@"key"] = [prefix stringByAppendingString:dict[@"key"]];
             [specifier setProperty:dict forKey:@"libcolorpicker"];
