@@ -392,6 +392,7 @@ void NTFTestBanner() {
         }
 
     }
+    [self layoutSubviews];
 }
 
 %new
@@ -790,6 +791,9 @@ void NTFTestBanner() {
         // view.frame = CGRectMake(view.frame.origin.x, view.frame.origin.y + MODERNXI_Y_OFFSET, view.frame.size.width, view.frame.size.height - MODERNXI_Y_OFFSET);
         double alpha = [config backgroundBlurAlpha]/2 + [config backgroundBlurAlpha]/2;
         view.alpha = alpha;
+
+        UIView *stackDimmingView = [self valueForKey:@"_stackDimmingView"];
+        if(stackDimmingView) stackDimmingView.hidden = true;
 
         for (UIView *subsubview in view.subviews) {
             if ([subsubview isKindOfClass:%c(MTMaterialView)]) {
