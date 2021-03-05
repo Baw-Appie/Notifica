@@ -6,6 +6,39 @@
 
 #import "NTFConfig.h"
 
+typedef struct CAColorMatrix {
+	float m11;
+	float m12;
+	float m13;
+	float m14;
+	float m15;
+	float m21;
+	float m22;
+	float m23;
+	float m24;
+	float m25;
+	float m31;
+	float m32;
+	float m33;
+	float m34;
+	float m35;
+	float m41;
+	float m42;
+	float m43;
+	float m44;
+	float m45;
+} CAColorMatrix;
+
+@interface MTColor
++(MTColor *)colorWithCGColor:(CGColorRef)arg1 ;
+-(CAColorMatrix)sourceOverColorMatrix;
+@end
+
+@interface CALayer (Private)
+-(void)_mt_setColorMatrix:(CAColorMatrix)arg1 withName:(id)arg2 filterOrder:(id)arg3 removingIfIdentity:(BOOL)arg4 ;
+@end
+
+
 @interface UIView(Notifica)
 
 -(id)_viewControllerForAncestor;

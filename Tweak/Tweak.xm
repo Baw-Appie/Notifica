@@ -340,7 +340,12 @@ void NTFTestBanner() {
     self.clipsToBounds = YES;
 }
 %end
-
+// %hook CABackdropLayer
+// - (void)_mt_setColorMatrix:(CAColorMatrix)colorMatrix withName:(NSString *)name filterOrder:(NSArray<NSString *> *)filterOrder removingIfIdentity:(BOOL)removingIfIdentity {
+//     HBLogError(@"setColorMatrixColor %@ %@", name, filterOrder);
+//     %orig;
+// }
+// %end
 %hook MTMaterialView
 %property (nonatomic, retain) CAGradientLayer *ntfGradientLayer;
 -(void)layoutSubviews {
@@ -358,12 +363,15 @@ void NTFTestBanner() {
 %new
 -(void)ntfColorize:(UIColor *)color withBlurColor:(UIColor *)bgColor alpha:(double)alpha {
     UIView *view = MSHookIvar<UIView *>(self, "_highlightView");
-    if (!view || !color || !bgColor) return;
+    if (!color || !bgColor) return;
 
     self.clipsToBounds = YES;
     view.clipsToBounds = YES;
 
-    if ([view respondsToSelector:@selector(setColorMatrixColor:)]) {
+    if(!view) {
+        CAColorMatrix colorr = [(MTColor *)[[NSClassFromString(@"MTColor") colorWithCGColor:color.CGColor] colorWithAlphaComponent:alpha] sourceOverColorMatrix];
+        [[self layer] _mt_setColorMatrix:colorr withName:@"opacityColorMatrix" filterOrder:@[@"luminanceMap"] removingIfIdentity:NO];
+    } else if ([view respondsToSelector:@selector(setColorMatrixColor:)]) {
         _MTBackdropView *backdropView = (_MTBackdropView *)view;
 
         [backdropView setBackgroundColor: bgColor];
