@@ -1,0 +1,10 @@
+{
+  "DISABLE_IDLE_TIMER" = "잠금화면에서 자동 잠금 비활성화";
+  "EXPERIMENTAL_COLORS" = "실험적인 색상 계산";
+  "DEFAULT" = "기본";
+  "EXPERIMENTAL" = "실험적";
+  "AXON" = "Axon";
+  "HD_ICONS" = "HD/Themed 아이콘";
+  "COLORIZE_SECTION" = "iOS 12 섹션 버튼 색상화";
+  "DISABLE_ICON_SHADOW" = "아이콘 그림자 비활성화";
+}

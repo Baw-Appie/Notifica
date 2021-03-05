@@ -1,0 +1,30 @@
+{
+  "ENABLED" = "활성화";
+  "SETTINGS" = "설정";
+
+  "PRESET" = "저장된 설정";
+  "NOTIFICATION_CENTER" = "알림 센터";
+  "NOTIFICATIONS" = "알림";
+  "BANNERS" = "배너";
+  "WIDGETS" = "위젯";
+  "DETAILS" = "상세 설정";
+  "NOW_PLAYING" = "지금 플레이 중";
+  "EXPERIMENTAL" = "실험적인 설정";
+
+  "RESPRING" = "리스프링";
+  "RESRPING_NEEDED" = "설정을 수정한 뒤 여기에서 리스프링해야 합니다.";
+  "ARE_YOU_SURE_TO_RESET_PREFS" = "정말 모든 설정을 재설정할까요? 이것은 되돌릴 수 없습니다.";
+  "OK" = "네";
+  "CANCEL" = "취소";
+  "RESET_PREFS" = "기본값 설정으로 복원 후 리스프링";
+  "SOURCE_CODE" = "소스 코드";
+  "DONATE_TO_NEPETA" = "Donate to Nepeta";
+  "SUPPORT_ME" = "지원해주세요!";
+  "TEST_NOTIFICATIONS" = "테스트 알림";
+  "TEST_BANNER" = "테스트 배너";
+  "SAVE_SETTINGS" = "현재 설정 저장";
+  "SHARE_SETTINGS" = "현재 설정 공유";
+  "IMPORT_SETTINGS" = "공유된 설정 가져오기";
+  "COPY_N_TO_B" = "복사: 알림 -> 배너";
+  "COPY_B_TO_N" = "복사: 배너 -> 알림";
+}

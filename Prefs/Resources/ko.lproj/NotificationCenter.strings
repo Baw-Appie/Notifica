@@ -1,0 +1,9 @@
+{
+  "HIDE_NO_OLDER" = "\"오래된 알림 없음\" 숨기기";
+  "IDLE_TIMER" = "화면 꺼짐 타이머 (잠금화면)";
+  "VERTICAL_OFFSET" = "가로 오프셋";
+  "VERTICAL_OFFSET_NOTIFICATIONS" = "가로 오프셋: 알림";
+  "VERTICAL_OFFSET_NOW_PLAYING" = "가로 오프셋: 지금 플레이 중";
+  "PULL_TO_CLEAR_ALL" = "끌어 당겨서 알림 지우기";
+	"NOTIFICATION_SPACING" = "알림 간격";
+}

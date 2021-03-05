@@ -1,0 +1,27 @@
+{
+  "BACKGROUND_COLOR" = "배경 색상";
+  "HEADER_TEXT_COLOR" = "헤더 글자 색상";
+  "CONTENT_TEXT_COLOR" = "내용 글자 색상";
+  "NOTIFICATION_OPACITY" = "알림 투명도";
+  "CORNER_RADIUS" = "알림 모서리 둥글기";
+  "CENTER_CONTENTS" = "내용 중앙에 배치";
+  "ICON_CORNER_RADIUS" = "아이콘 둥글기 (버그 많음)";
+
+  "STYLE" = "스타일";
+  "MODERN" = "모던";
+  "MINIMALIST" = "미니멀리스트";
+  "HIDE_ICON" = "아이콘 숨기기";
+  "HIDE_X" = "닫기 버튼 숨기기";
+  "HIDE_APP_NAME" = "앱 이름 숨기기";
+
+  "DEFAULT" = "기본";
+  "DYNAMIC" = "동적";
+  "CUSTOM" = "사용자 지정";
+  "CUSTOM_COLOR" = "사용자 지정 색상";
+
+  "BACKGROUND_BLUR_MODE" = "배경 흐림 모드";
+  "DARK" = "다크";
+  "LIGHT" = "라이트";
+  "BACKGROUND_BLUR_OPACITY" = "배경 흐림 투명도";
+  "BACKGROUND_BLUR_COLOR_OPACITY" = "배경 흐림 색상 투명도";
+}
