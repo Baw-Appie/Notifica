@@ -2473,7 +2473,29 @@ void NTFTestBanner() {
 
 %end
 
+%group NotificaAlderis
+@interface SBIconController : UIViewController
+@end
+%hook SBIconController
 
+-(void)viewDidAppear:(BOOL)animated {
+    %orig;
+    UIAlertController *alertController = [UIAlertController
+        alertControllerWithTitle:@"Notifica"
+        message:@"Alderis Color Picker is installed (and libcolorpicker does not exist) on this device.\n\nNotifica is disabled because Alderis is not compatible with Notifica and causes crash.\n\nPlease install libcolorpicker. (and remove Alderis Color Picker if you want)"
+        preferredStyle:UIAlertControllerStyleAlert
+    ];
+
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Okay" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+
+    }]];
+
+    [self presentViewController:alertController animated:YES completion:NULL];
+}
+
+%end
+
+%end
 
 %group NotificaSB
 
@@ -2592,6 +2614,10 @@ void NTFTestBanner() {
         HBPreferences *file = [[HBPreferences alloc] initWithIdentifier:@"me.nepeta.notifica"];
         NSMutableDictionary *colors = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/me.nepeta.notifica-colors.plist"];
         enabled = [([file objectForKey:@"Enabled"] ?: @(YES)) boolValue] && !dpkgInvalid;
+        if([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/Frameworks/Alderis.framework/Alderis"] && ![[NSFileManager defaultManager] fileExistsAtPath:@"/var/lib/dpkg/info/org.thebigboss.libcolorpicker.list"]) {
+            %init(NotificaAlderis);
+            return;
+        }
 
         if (dpkgInvalid) %init(NotificaSB);
         if (!enabled) return;
