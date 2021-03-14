@@ -3,7 +3,7 @@ Name: Notifica (BawAppie)
 Depends: mobilesubstrate, org.thebigboss.libcolorpicker (>= 1.6.9), ws.hbang.common (>= 1.11), firmware (>= 11.0)
 Conflicts: io.ominousness.modernxi, me.nepeta.libnepeta
 Replace: me.nepeta.notifica
-Version: 1.0
+Version: 1.0.1
 Architecture: iphoneos-arm
 Description: Notification customizer
 Maintainer: Nepeta & BawAppie <pp121324@gmail.com>

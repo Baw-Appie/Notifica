@@ -2618,7 +2618,7 @@ void NTFTestBanner() {
         HBPreferences *file = [[HBPreferences alloc] initWithIdentifier:@"me.nepeta.notifica"];
         NSMutableDictionary *colors = [[NSMutableDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/me.nepeta.notifica-colors.plist"];
         enabled = [([file objectForKey:@"Enabled"] ?: @(YES)) boolValue] && !dpkgInvalid;
-        if([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/Frameworks/Alderis.framework/Alderis"] && ![[NSFileManager defaultManager] fileExistsAtPath:@"/var/lib/dpkg/info/org.thebigboss.libcolorpicker.list"]) {
+        if([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/Frameworks/Alderis.framework/Alderis"] && ![[NSFileManager defaultManager] fileExistsAtPath:@"/var/lib/dpkg/info/org.thebigboss.libcolorpicker.list"] && 0) {
             %init(NotificaAlderis);
             return;
         }
